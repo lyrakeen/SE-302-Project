@@ -108,14 +108,21 @@ public class DatabaseLoader {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(fetchCoursesSQL)) {
             while (rs.next()) {
-                Course course = new Course(
-                        rs.getString("course_name"),
-                        rs.getString("time_to_start"),
-                        rs.getInt("duration_in_lecture_hours"),
-                        rs.getString("lecturer"),
-                        rs.getString("students")
-                );
-                courses.add(course);
+                String courseName = rs.getString("course_name");
+                String timeToStart = rs.getString("time_to_start");
+                int duration = rs.getInt("duration_in_lecture_hours");
+                String lecturer = rs.getString("lecturer");
+                String students = rs.getString("students");
+
+                // Duplicate kontrolü
+                boolean alreadyExists = courses.stream()
+                        .anyMatch(course -> course.getName().equals(courseName) &&
+                                course.getTimeToStart().equals(timeToStart) &&
+                                course.getLecturer().equals(lecturer));
+                if (!alreadyExists) {
+                    Course course = new Course(courseName, timeToStart, duration, lecturer, students);
+                    courses.add(course);
+                }
             }
         }
     }
@@ -124,25 +131,49 @@ public class DatabaseLoader {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(fetchClassroomsSQL)) {
             while (rs.next()) {
-                Classroom classroom = new Classroom(
-                        rs.getString("classroom_name"),
-                        rs.getInt("capacity")
-                );
-                classrooms.add(classroom);
+                String classroomName = rs.getString("classroom_name");
+                int capacity = rs.getInt("capacity");
+
+                // Duplicate kontrolü
+                boolean alreadyExists = classrooms.stream()
+                        .anyMatch(classroom -> classroom.getName().equals(classroomName));
+                if (!alreadyExists) {
+                    Classroom classroom = new Classroom(classroomName, capacity);
+                    classrooms.add(classroom);
+                }
             }
         }
     }
     private void loadStudents() {
         for (Course course : courses) {
             for (Student student : course.getStudents()) {
-                students.add(student); // `HashSet` aynı öğrenciyi birden fazla eklemez
+                if (students.add(student)) { // Eğer öğrenci yeni eklenmişse
+                    student.enrollCourse(course); // Kursu öğrenciye ekle
+                }else {
+                    // Zaten ekli öğrenciyi bul ve kursu ekle
+                    for (Student existingStudent : students) {
+                        if (existingStudent.equals(student)) {
+                            existingStudent.enrollCourse(course);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
     private void loadTeachers() {
         for (Course course : courses) {
             Teacher teacher = new Teacher(course.getLecturer());
-            teachers.add(teacher); // `HashSet` aynı öğretmeni birden fazla eklemez
+           if(teachers.add(teacher) ){
+               teacher.assignCourse(course);
+           } else{
+               for (Teacher existingTeacher : teachers) {
+                   if (existingTeacher.equals(teacher)) {
+                       existingTeacher.assignCourse(course);
+                       break;
+                   }
+               }
+           }
         }
     }
     // Getters

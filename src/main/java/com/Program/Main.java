@@ -25,6 +25,21 @@ public class Main {
             Classroom classroom = course.getClassroom();
             System.out.println("Course: " + course.getName() + ", Day: " + course.getDay() + ", Start Time: " + course.getStartTime() + ", Classroom: " + (classroom != null ? classroom.getName() : "Not Allocated"));
         }
+        System.out.println("\nTeachers and their courses:");
+        for (Teacher teacher : databaseLoader.getTeachers()) {
+            System.out.println("Teacher: " + teacher.getFullName());
+            for (Course course : teacher.getAssignedCourses()) {
+                System.out.println("  Course: " + course.getName());
+            }
+        }
+
+        System.out.println("\nStudents and their courses:");
+        for (Student student : databaseLoader.getStudents()) {
+            System.out.println("Student: " + student.getFullName());
+            for (Course course : student.getEnrolledCourses()) {
+                System.out.println("  Course: " + course.getName());
+            }
+        }
 
     }
 }
