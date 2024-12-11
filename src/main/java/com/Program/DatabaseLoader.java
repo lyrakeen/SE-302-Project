@@ -77,6 +77,14 @@ public class DatabaseLoader {
     }
 
     private static void insertCoursesData(Connection connection, List<String[]> coursesData) throws SQLException{
+        String checkSQL = "SELECT COUNT(*) FROM courses";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(checkSQL)) {
+            if (rs.next() && rs.getInt(1) > 0) {
+                System.out.println("Courses table already populated. Skipping insertion.");
+                return; // Eğer tablo doluysa veri ekleme
+            }
+        }
         String insertSQL = "INSERT INTO courses (course_name, time_to_start, duration_in_lecture_hours, lecturer, students, student_count) VALUES (?, ?, ?, ?, ?, ?)";
     try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
         for(String[] row: coursesData){
@@ -93,6 +101,14 @@ public class DatabaseLoader {
 }
 
     private  static void insertClassroomData(Connection connection, List<String[]> classroomData) throws  SQLException{
+        String checkSQL = "SELECT COUNT(*) FROM classroom_capacity";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(checkSQL)) {
+            if (rs.next() && rs.getInt(1) > 0) {
+                System.out.println("Classroom table already populated. Skipping insertion.");
+                return; // Eğer tablo doluysa veri ekleme
+            }
+        }
         String insertSQL = "INSERT INTO classroom_capacity (classroom_name,capacity) VALUES (?,?)";
         try(PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)){
             for(String[] row: classroomData){
@@ -108,14 +124,21 @@ public class DatabaseLoader {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(fetchCoursesSQL)) {
             while (rs.next()) {
-                Course course = new Course(
-                        rs.getString("course_name"),
-                        rs.getString("time_to_start"),
-                        rs.getInt("duration_in_lecture_hours"),
-                        rs.getString("lecturer"),
-                        rs.getString("students")
-                );
-                courses.add(course);
+                String courseName = rs.getString("course_name");
+                String timeToStart = rs.getString("time_to_start");
+                int duration = rs.getInt("duration_in_lecture_hours");
+                String lecturer = rs.getString("lecturer");
+                String students = rs.getString("students");
+
+                // Duplicate kontrolü
+                boolean alreadyExists = courses.stream()
+                        .anyMatch(course -> course.getName().equals(courseName) &&
+                                course.getTimeToStart().equals(timeToStart) &&
+                                course.getLecturer().equals(lecturer));
+                if (!alreadyExists) {
+                    Course course = new Course(courseName, timeToStart, duration, lecturer, students);
+                    courses.add(course);
+                }
             }
         }
     }
@@ -124,27 +147,54 @@ public class DatabaseLoader {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(fetchClassroomsSQL)) {
             while (rs.next()) {
-                Classroom classroom = new Classroom(
-                        rs.getString("classroom_name"),
-                        rs.getInt("capacity")
-                );
-                classrooms.add(classroom);
+                String classroomName = rs.getString("classroom_name");
+                int capacity = rs.getInt("capacity");
+
+                // Duplicate kontrolü
+                boolean alreadyExists = classrooms.stream()
+                        .anyMatch(classroom -> classroom.getName().equals(classroomName));
+                if (!alreadyExists) {
+                    Classroom classroom = new Classroom(classroomName, capacity);
+                    classrooms.add(classroom);
+                }
             }
         }
     }
+
     private void loadStudents() {
         for (Course course : courses) {
             for (Student student : course.getStudents()) {
-                students.add(student); // `HashSet` aynı öğrenciyi birden fazla eklemez
+                if (students.add(student)) { // Eğer yeni bir öğrenciyse ekle
+                    student.enrollCourse(course);
+                } else {
+                    // Zaten varsa, öğrencinin kurs listesine ekle
+                    for (Student existingStudent : students) {
+                        if (existingStudent.equals(student)) {
+                            existingStudent.enrollCourse(course);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
     private void loadTeachers() {
         for (Course course : courses) {
             Teacher teacher = new Teacher(course.getLecturer());
-            teachers.add(teacher); // `HashSet` aynı öğretmeni birden fazla eklemez
+            if (teachers.add(teacher)) { // Eğer yeni bir öğretmense ekle
+                teacher.assignCourse(course);
+            } else {
+                // Zaten varsa, öğretmenin kurs listesine ekle
+                for (Teacher existingTeacher : teachers) {
+                    if (existingTeacher.equals(teacher)) {
+                        existingTeacher.assignCourse(course);
+                        break;
+                    }
+                }
+            }
         }
     }
+
     // Getters
     public List<Course> getCourses() { return courses; }
     public Set<Teacher> getTeachers() { return teachers; }

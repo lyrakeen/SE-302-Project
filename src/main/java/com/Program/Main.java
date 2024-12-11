@@ -26,5 +26,15 @@ public class Main {
             System.out.println("Course: " + course.getName() + ", Day: " + course.getDay() + ", Start Time: " + course.getStartTime() + ", Classroom: " + (classroom != null ? classroom.getName() : "Not Allocated"));
         }
 
+        System.out.println("\nStudents and their enrolled courses:");
+        for (Student student : databaseLoader.getStudents()) {
+            System.out.println("Student: " + student.getFullName());
+            for (Course course : student.getEnrolledCourses()) {
+                System.out.println("  Enrolled in: " + course.getName() + " on " + course.getDay() + " at " + course.getStartTime());
+            }
+        }
+
+
+
     }
 }
