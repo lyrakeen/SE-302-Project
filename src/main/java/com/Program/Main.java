@@ -2,29 +2,47 @@ package com.Program;
 import java.util.List;
 import java.util.Set;
 
-public class Main {
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+import javafx.animation.ScaleTransition;
+import javafx.util.Duration;
+import javafx.scene.paint.Color;
+
+import java.io.*;
+import java.time.LocalDate;
+import java.util.*;
+
+
+import com.google.gson.Gson;
+
+import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
+public class Main extends Application {
+    VBox root = new VBox();
+    Stage firStage = new Stage();
+    Scene scene = new Scene(root, 300, 400);
+
+    @Override
+    public void start(Stage firstStage) {
+        firstStage.setScene(scene);
+        firstStage.show();
+    }
+
     public static void main(String[] args) {
-        // Initialize the DatabaseLoader
-        DatabaseLoader databaseLoader = new DatabaseLoader();
-        databaseLoader.start();
-
-        // Retrieve data from the loader
-        List<Course> courses = databaseLoader.getCourses();
-        Set<Teacher> teachers = databaseLoader.getTeachers();
-        Set<Student> students = databaseLoader.getStudents();
-        List<Classroom> classrooms = databaseLoader.getClassrooms();
-
-        // Initialize the CourseManager
-        CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
-
-        // Allocate classrooms to courses
-        courseManager.allocateClassrooms();
-
-        // Display results (Example output)
-        for (Course course : courses) {
-            Classroom classroom = course.getClassroom();
-            System.out.println("Course: " + course.getName() + ", Day: " + course.getDay() + ", Start Time: " + course.getStartTime() + ", Classroom: " + (classroom != null ? classroom.getName() : "Not Allocated"));
-        }
-
+        launch(args);
     }
 }
