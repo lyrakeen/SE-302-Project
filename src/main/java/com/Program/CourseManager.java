@@ -1,13 +1,14 @@
 package com.Program;
 import java.util.List;
+import java.util.Set;
 
 public class CourseManager {
     private List<Course> courses;
-    private List<Teacher> teachers;
-    private List<Student> students;
+    private Set<Teacher> teachers;
+    private Set<Student> students;
     private List<Classroom> classrooms;
 
-    public CourseManager(List<Course> courses, List<Teacher> teachers, List<Student> students, List<Classroom> classrooms) {
+    public CourseManager(List<Course> courses, Set<Teacher> teachers, Set<Student> students, List<Classroom> classrooms) {
         this.courses = courses;
         this.teachers = teachers;
         this.students = students;
@@ -45,11 +46,11 @@ public class CourseManager {
         return courses;
     }
 
-    public List<Teacher> getTeachers() {
+    public Set<Teacher> getTeachers() {
         return teachers;
     }
 
-    public List<Student> getStudents() {
+    public Set<Student> getStudents() {
         return students;
     }
 

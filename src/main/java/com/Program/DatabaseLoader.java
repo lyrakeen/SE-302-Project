@@ -4,14 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class DatabaseLoader {
     private List<Course> courses = new ArrayList<>();
-    private List<Teacher> teachers = new ArrayList<>();
-    private List<Student> students = new ArrayList<>();
+    private Set<Student> students = new HashSet<>();
+    private Set<Teacher> teachers = new HashSet<>();
+
     private List<Classroom> classrooms = new ArrayList<>();
     public  void start() {
         String coursesFilePath="Courses.csv";
@@ -136,23 +135,19 @@ public class DatabaseLoader {
     private void loadStudents() {
         for (Course course : courses) {
             for (Student student : course.getStudents()) {
-                if (!students.contains(student)) {
-                    students.add(student);
-                }
+                students.add(student); // `HashSet` aynı öğrenciyi birden fazla eklemez
             }
         }
     }
     private void loadTeachers() {
         for (Course course : courses) {
             Teacher teacher = new Teacher(course.getLecturer());
-            if (!teachers.contains(teacher)) {
-                teachers.add(teacher);
-            }
+            teachers.add(teacher); // `HashSet` aynı öğretmeni birden fazla eklemez
         }
     }
     // Getters
     public List<Course> getCourses() { return courses; }
-    public List<Teacher> getTeachers() { return teachers; }
-    public List<Student> getStudents() { return students; }
+    public Set<Teacher> getTeachers() { return teachers; }
+    public Set<Student> getStudents() { return students; }
     public List<Classroom> getClassrooms() { return classrooms; }
 }

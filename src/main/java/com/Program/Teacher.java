@@ -11,6 +11,19 @@ public class Teacher {
         this.fullName = fullName;
         this.assignedCourses = new ArrayList<>();
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Teacher teacher = (Teacher) o;
+        return fullName.equals(teacher.fullName); // Eşitlik tam isme göre belirlenir
+    }
+
+    @Override
+    public int hashCode() {
+        return fullName.hashCode(); // Benzersizlik tam isme göre belirlenir
+    }
+
 
     public String getFullName() {
         return fullName;

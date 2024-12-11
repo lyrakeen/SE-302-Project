@@ -12,6 +12,19 @@ public class Student {
         this.enrolledCourses = new ArrayList<>();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return fullName.equals(student.fullName); // Eşitlik tam isimlere göre belirlenir
+    }
+
+    @Override
+    public int hashCode() {
+        return fullName.hashCode(); // Benzersizlik tam isimlere göre belirlenir
+    }
+
     public String getFullName() {
         return fullName;
     }
