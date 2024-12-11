@@ -19,6 +19,6 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-application{
-    mainClass = 'com.Database.ClassroomAllocation'
+application {
+    mainClass = 'com.Program.Main'
 }
