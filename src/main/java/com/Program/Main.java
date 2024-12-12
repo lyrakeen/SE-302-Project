@@ -5,9 +5,22 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+    VBox root = new VBox();
+    Scene scene = new Scene(root, 400, 200);
+
+    @Override
+    public void start(Stage primaryStage) {
+
+        primaryStage.setTitle("Sketchuler");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
     public static void main(String[] args) {
         // Initialize the DatabaseLoader
         DatabaseLoader databaseLoader = new DatabaseLoader();
@@ -47,19 +60,5 @@ public class Main extends Application {
 
         launch(args);
 
-    }
-    @Override
-    public void start(Stage primaryStage) {
-        // Basit bir JavaFX label oluştur
-        Label label = new Label("JavaFX Çalışıyor!");
-        StackPane root = new StackPane(label);
-
-        // Sahneyi ayarla
-        Scene scene = new Scene(root, 400, 200);
-
-        // Stage (pencere) ayarları
-        primaryStage.setTitle("JavaFX Test");
-        primaryStage.setScene(scene);
-        primaryStage.show();
     }
 }
