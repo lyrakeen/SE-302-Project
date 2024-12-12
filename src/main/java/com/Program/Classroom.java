@@ -2,7 +2,6 @@ package com.Program;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class Classroom {
     private String name;
     private int capacity;

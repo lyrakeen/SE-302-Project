@@ -1,8 +1,13 @@
 package com.Program;
 import java.util.List;
 import java.util.Set;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
-public class Main {
+public class Main extends Application {
     public static void main(String[] args) {
         // Initialize the DatabaseLoader
         DatabaseLoader databaseLoader = new DatabaseLoader();
@@ -40,7 +45,21 @@ public class Main {
             }
         }
 
+        launch(args);
 
+    }
+    @Override
+    public void start(Stage primaryStage) {
+        // Basit bir JavaFX label oluştur
+        Label label = new Label("JavaFX Çalışıyor!");
+        StackPane root = new StackPane(label);
 
+        // Sahneyi ayarla
+        Scene scene = new Scene(root, 400, 200);
+
+        // Stage (pencere) ayarları
+        primaryStage.setTitle("JavaFX Test");
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 }
