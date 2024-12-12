@@ -2,6 +2,7 @@ package com.Program;
 import java.util.List;
 import java.util.Set;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -23,8 +24,9 @@ public class Main extends Application {
     VBox root = new VBox(10);
     HBox toBeNext = new HBox(10);
     HBox toCenter = new HBox(10);
-    Scene scene = new Scene(root, 600, 400);
     TableView table = new TableView<>();
+    HBox forTablePadding = new HBox(table);
+    Scene scene = new Scene(root, 600, 400);
     MenuBar menuBar = new MenuBar();
     Menu fileMenu = new Menu("File");
     Menu helpMenu = new Menu("Help");
@@ -51,15 +53,15 @@ public class Main extends Application {
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
         selection.setOnAction(e -> {
             String selected = selection.getValue(); 
-            System.out.println("Seçilen meyve: " + selected);
         });
-        sketchuler.setStyle("-fx-font-size: 35px; " + 
-                            "-fx-text-fill: #71D0F2; " + 
-                            "-fx-font-family: 'Comic Sans MS'; "+
-                            "-fx-font-weight: bold;"); 
+        sketchuler.setStyle("-fx-font-size: 60px; " + 
+                            "-fx-text-fill:rgb(255, 157, 0); " + 
+                            "-fx-font-family: 'Caveat'; "+
+                            "-fx-font-weight: normal;"); 
         toCenter.getChildren().add(sketchuler);
         toBeNext.getChildren().addAll(selection, mainProceed);
-        root.getChildren().addAll(menuBar,spacer1,toCenter,spacer3,toBeNext,spacer2,table);
+        root.getChildren().addAll(menuBar,spacer1,toCenter,spacer3,toBeNext,spacer2,forTablePadding);
+        forTablePadding.setPadding(new Insets(10));
         toBeNext.setAlignment(Pos.CENTER);
         toCenter.setAlignment(Pos.CENTER);
         HBox.setHgrow(spacer1, Priority.ALWAYS);
