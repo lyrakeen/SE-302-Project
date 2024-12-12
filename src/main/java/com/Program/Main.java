@@ -20,10 +20,10 @@ import javafx.scene.layout.Region;
 
 public class Main extends Application {
 
-    VBox root = new VBox();
+    VBox root = new VBox(10);
     HBox toBeNext = new HBox(10);
-    HBox toCenter = new HBox();
-    Scene scene = new Scene(root, 400, 200);
+    HBox toCenter = new HBox(10);
+    Scene scene = new Scene(root, 600, 400);
     TableView table = new TableView<>();
     MenuBar menuBar = new MenuBar();
     Menu fileMenu = new Menu("File");
@@ -53,6 +53,10 @@ public class Main extends Application {
             String selected = selection.getValue(); 
             System.out.println("Seçilen meyve: " + selected);
         });
+        sketchuler.setStyle("-fx-font-size: 35px; " + 
+                            "-fx-text-fill: #71D0F2; " + 
+                            "-fx-font-family: 'Comic Sans MS'; "+
+                            "-fx-font-weight: bold;"); 
         toCenter.getChildren().add(sketchuler);
         toBeNext.getChildren().addAll(selection, mainProceed);
         root.getChildren().addAll(menuBar,spacer1,toCenter,spacer3,toBeNext,spacer2,table);
