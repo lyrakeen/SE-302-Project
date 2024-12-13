@@ -1,4 +1,5 @@
 package com.Program;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -16,8 +17,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.ComboBox;
@@ -57,19 +58,25 @@ public class Main extends Application {
         menuBar.getMenus().addAll(fileMenu, helpMenu);
         fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
         helpMenu.getItems().addAll(aboutItem, manualItem);
+
         Button mainProceed = new Button("Proceed");
+        Button clearButton = new Button("Clear");
         ComboBox<String> selection = new ComboBox<>();
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
+
         sketchuler.setStyle("-fx-font-size: 60px; " +
                 "-fx-text-fill:rgb(255, 157, 0); " +
                 "-fx-font-family: 'Caveat'; "+
                 "-fx-font-weight: normal;");
+
         toCenter.getChildren().add(sketchuler);
-        toBeNext.getChildren().addAll(selection, mainProceed);
+        toBeNext.getChildren().addAll(selection, mainProceed, clearButton);
         root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
+
         forTablePadding.setPadding(new Insets(10));
         toBeNext.setAlignment(Pos.CENTER);
         toCenter.setAlignment(Pos.CENTER);
+
         HBox.setHgrow(spacer1, Priority.ALWAYS);
         VBox.setVgrow(spacer1, Priority.ALWAYS);
         HBox.setHgrow(spacer2, Priority.ALWAYS);
@@ -78,7 +85,12 @@ public class Main extends Application {
         VBox.setVgrow(spacer3, Priority.ALWAYS);
         HBox.setHgrow(table, Priority.ALWAYS);
         VBox.setVgrow(table, Priority.ALWAYS);
+
         mainProceed.setOnAction(e -> selectionResult(selection.getValue()));
+        clearButton.setOnAction(e -> {
+            table.getItems().clear();
+            table.getColumns().clear();
+        });
 
         firstStage.setTitle("Sketchuler");
         firstStage.setScene(scene);
