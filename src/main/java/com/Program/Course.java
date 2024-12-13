@@ -13,7 +13,7 @@ public class Course {
     private String startTime;
     private String endTime;
     private Classroom classroom;
-    private List<Teacher> teachers;
+    private List<Teacher> teachers; // silinecek
 
     public Course(String name, String timeToStart, int duration, String lecturer, String studentsCsv) {
         this.name = name;

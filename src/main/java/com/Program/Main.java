@@ -1,7 +1,9 @@
 package com.Program;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,6 +13,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -18,8 +21,14 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Region;
+import javafx.scene.control.TableColumn;
 
 public class Main extends Application {
+
+    static List<Course> courses;
+    static Set<Teacher> teachers;
+    static Set<Student> students;
+    static List<Classroom> classrooms;
 
     VBox root = new VBox(10);
     HBox toBeNext = new HBox(10);
@@ -51,9 +60,6 @@ public class Main extends Application {
         Button mainProceed = new Button("Proceed");
         ComboBox<String> selection = new ComboBox<>();
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
-        selection.setOnAction(e -> {
-            String selected = selection.getValue(); 
-        });
         sketchuler.setStyle("-fx-font-size: 60px; " + 
                             "-fx-text-fill:rgb(255, 157, 0); " + 
                             "-fx-font-family: 'Caveat'; "+
@@ -72,10 +78,46 @@ public class Main extends Application {
         VBox.setVgrow(spacer3, Priority.ALWAYS);
         HBox.setHgrow(table, Priority.ALWAYS);
         VBox.setVgrow(table, Priority.ALWAYS);
+        mainProceed.setOnAction(e -> selectionResult(selection.getValue()));
 
         firstStage.setTitle("Sketchuler");
         firstStage.setScene(scene);
         firstStage.show();
+    }
+
+    private void selectionResult(String selected) {
+        switch (selected) {
+            case "Courses" :
+                //kursun ismi hocası klasrumu
+                TableColumn<Course, String> nameColumn = new TableColumn<>("Course Name");
+                nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+                TableColumn<Course, String> lecturerColumn = new TableColumn<>("Lecturer");
+                lecturerColumn.setCellValueFactory(new PropertyValueFactory<>("lecturer"));
+
+                TableColumn<Course, String> classroomColumn = new TableColumn<>("Classroom");
+                classroomColumn.setCellValueFactory(cellData -> {
+                    Classroom classroom = cellData.getValue().getClassroom();
+                    return classroom != null ? new SimpleStringProperty(classroom.getName()) : new SimpleStringProperty("No Classroom");
+                });
+
+                TableColumn<?, ?>[] columns = {nameColumn, lecturerColumn, classroomColumn};
+                System.out.println(courses.get(0).getDay());
+                table.getColumns().setAll(columns);
+                adjustSize(table, columns, 0.33333);
+                table.getItems().addAll(courses);
+                break;
+
+            
+
+        }
+
+    }
+
+    private void adjustSize(TableView<?> table, TableColumn<?, ?>[] columns, double widthPercentage) { // to adjust tableview columns width
+        for (TableColumn<?, ?> column : columns) {
+            column.prefWidthProperty().bind(table.widthProperty().multiply(widthPercentage));
+        }
     }
 
     public static void main(String[] args) {
@@ -84,10 +126,10 @@ public class Main extends Application {
         databaseLoader.start();
 
         // Retrieve data from the loader
-        List<Course> courses = databaseLoader.getCourses();
-        Set<Teacher> teachers = databaseLoader.getTeachers();
-        Set<Student> students = databaseLoader.getStudents();
-        List<Classroom> classrooms = databaseLoader.getClassrooms();
+        courses = databaseLoader.getCourses();
+        teachers = databaseLoader.getTeachers();
+        students = databaseLoader.getStudents();
+        classrooms = databaseLoader.getClassrooms();
 
         // Initialize the CourseManager
         CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
@@ -96,10 +138,10 @@ public class Main extends Application {
         courseManager.allocateClassrooms();
 
         // Display results (Example output)
-        for (Course course : courses) {
+         for (Course course : courses) {
             Classroom classroom = course.getClassroom();
             System.out.println("Course: " + course.getName() + ", Day: " + course.getDay() + ", Start Time: " + course.getStartTime() + ", Classroom: " + (classroom != null ? classroom.getName() : "Not Allocated"));
-        }
+        } /* 
         System.out.println("\nTeachers and their courses:");
         for (Teacher teacher : databaseLoader.getTeachers()) {
             System.out.println("Teacher: " + teacher.getFullName());
@@ -113,7 +155,7 @@ public class Main extends Application {
             for (Course course : student.getEnrolledCourses()) {
                 System.out.println("  Enrolled in: " + course.getName() + " on " + course.getDay() + " at " + course.getStartTime());
             }
-        }
+        } */
 
         launch(args);
 
