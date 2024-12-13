@@ -34,6 +34,7 @@ public class Main extends Application {
     static List<Classroom> classrooms;
 
     VBox root = new VBox(10);
+    VBox infoRoot = new VBox(10);
     HBox toBeNext = new HBox(10);
     HBox toCenter = new HBox(10);
     TableView table = new TableView<>();
@@ -54,6 +55,8 @@ public class Main extends Application {
     Region spacer2 = new Region();
     Region spacer3 = new Region();
     Label sketchuler = new Label("Sketchuler");
+    Stage infoStage = new Stage();
+    Scene infoScene = new Scene(infoRoot);
 
     private String currentTab = null;
 
@@ -158,10 +161,47 @@ public class Main extends Application {
                     showAlert("Search is not supported for the selected tab.");
             }
         });
+        table.setOnMouseClicked(event -> {displayInfo(table.getSelectionModel().getSelectedItem());
+        });
 
         firstStage.setTitle("Sketchuler");
         firstStage.setScene(scene);
         firstStage.show();
+    }
+
+
+    private void displayInfo(Object selected) {
+        if(selected instanceof Course) {
+            infoRoot.getChildren().clear();
+
+            Course course = (Course) selected;
+            Label nameLabel = new Label("Name");
+            Label name = new Label(course.getName());
+            Label timeStartLabel = new Label("Start Time");
+            Label time = new Label(course.getTimeToStart());
+            Label durationLabel = new Label(    "Duration");
+            Label duration = new Label(Integer.toString(course.getDuration()));
+            Label dayLabel = new Label("Day");
+            Label day = new Label(course.getDay());
+            Label lecturerLabel = new Label("Lecturer");
+            Label lecturer = new Label(course.getLecturer());
+
+            HBox first = new HBox(5);
+            HBox second = new HBox(5);
+            HBox third = new HBox(5);
+            HBox fourth = new HBox(5);
+            HBox fifth = new HBox(5);
+
+            first.getChildren().addAll(nameLabel, name);
+            second.getChildren().addAll(timeStartLabel, time);
+            third.getChildren().addAll(durationLabel, duration);
+            fourth.getChildren().addAll(dayLabel, day);
+            fifth.getChildren().addAll(lecturerLabel, lecturer);
+            infoRoot.getChildren().addAll(fifth, fourth, third, second, first);
+            infoStage.setScene(infoScene);
+            infoStage.show();
+
+        }
     }
 
     private void selectionResult(String selected) {
