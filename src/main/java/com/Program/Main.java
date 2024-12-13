@@ -23,6 +23,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextInputDialog;
 
 public class Main extends Application {
 
@@ -53,6 +55,8 @@ public class Main extends Application {
     Region spacer3 = new Region();
     Label sketchuler = new Label("Sketchuler");
 
+    private String currentTab = null;
+
     @Override
     public void start(Stage firstStage) {
         menuBar.getMenus().addAll(fileMenu, helpMenu);
@@ -61,6 +65,7 @@ public class Main extends Application {
 
         Button mainProceed = new Button("Proceed");
         Button clearButton = new Button("Clear");
+        Button searchButton = new Button("Search");
         ComboBox<String> selection = new ComboBox<>();
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
 
@@ -70,7 +75,7 @@ public class Main extends Application {
                 "-fx-font-weight: normal;");
 
         toCenter.getChildren().add(sketchuler);
-        toBeNext.getChildren().addAll(selection, mainProceed, clearButton);
+        toBeNext.getChildren().addAll(selection, mainProceed, searchButton, clearButton);
         root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
 
         forTablePadding.setPadding(new Insets(10));
@@ -86,10 +91,72 @@ public class Main extends Application {
         HBox.setHgrow(table, Priority.ALWAYS);
         VBox.setVgrow(table, Priority.ALWAYS);
 
-        mainProceed.setOnAction(e -> selectionResult(selection.getValue()));
+        mainProceed.setOnAction(e -> {
+            if (selection.getValue() == null) {
+                showAlert("Please select an option before proceeding.");
+                return;
+            }
+            currentTab = selection.getValue();
+            selectionResult(currentTab);
+        });
+
         clearButton.setOnAction(e -> {
             table.getItems().clear();
             table.getColumns().clear();
+            currentTab = null;
+        });
+
+        searchButton.setOnAction(e -> {
+            if (currentTab == null) {
+                showAlert("Please proceed with a selection before searching.");
+                return;
+            }
+
+            String query = showInputDialog("Enter search term for " + currentTab);
+            if (query == null || query.isEmpty()) {
+                return;
+            }
+
+            switch (currentTab) {
+                case "Students":
+                    List<Student> filteredStudents = new ArrayList<>();
+                    for (Student student : students) {
+                        if (student.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                            filteredStudents.add(student);
+                        }
+                    }
+                    table.getItems().setAll(filteredStudents);
+                    break;
+                case "Teachers":
+                    List<Teacher> filteredTeachers = new ArrayList<>();
+                    for (Teacher teacher : teachers) {
+                        if (teacher.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                            filteredTeachers.add(teacher);
+                        }
+                    }
+                    table.getItems().setAll(filteredTeachers);
+                    break;
+                case "Courses":
+                    List<Course> filteredCourses = new ArrayList<>();
+                    for (Course course : courses) {
+                        if (course.getName().toLowerCase().contains(query.toLowerCase())) {
+                            filteredCourses.add(course);
+                        }
+                    }
+                    table.getItems().setAll(filteredCourses);
+                    break;
+                case "Classes":
+                    List<Classroom> filteredClassrooms = new ArrayList<>();
+                    for (Classroom classroom : classrooms) {
+                        if (classroom.getName().toLowerCase().contains(query.toLowerCase())) {
+                            filteredClassrooms.add(classroom);
+                        }
+                    }
+                    table.getItems().setAll(filteredClassrooms);
+                    break;
+                default:
+                    showAlert("Search is not supported for the selected tab.");
+            }
         });
 
         firstStage.setTitle("Sketchuler");
@@ -178,6 +245,22 @@ public class Main extends Application {
         }
     }
 
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Information");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private String showInputDialog(String prompt) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Search");
+        dialog.setHeaderText(prompt);
+        dialog.setContentText("Search term:");
+        return dialog.showAndWait().orElse(null);
+    }
+
     public static void main(String[] args) {
         DatabaseLoader databaseLoader = new DatabaseLoader();
         databaseLoader.start();
@@ -193,4 +276,3 @@ public class Main extends Application {
         launch(args);
     }
 }
-
