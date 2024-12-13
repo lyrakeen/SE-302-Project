@@ -2,6 +2,7 @@ package com.Program;
 
 import java.util.ArrayList;
 import java.util.List;
+
 public class Classroom {
     private String name;
     private int capacity;
@@ -46,5 +47,10 @@ public class Classroom {
 
     public void addCourse(Course course) {
         schedule.add(course);
+    }
+
+    public List<Course> getAssignedCourses() {
+        // `schedule` içeriğini `getAssignedCourses` adıyla döndürüyoruz.
+        return new ArrayList<>(schedule);
     }
 }

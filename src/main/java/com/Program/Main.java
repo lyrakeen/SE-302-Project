@@ -16,11 +16,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.ComboBox;
-import javafx.scene.layout.Region;
 import javafx.scene.control.TableColumn;
 
 public class Main extends Application {
@@ -55,18 +55,18 @@ public class Main extends Application {
     @Override
     public void start(Stage firstStage) {
         menuBar.getMenus().addAll(fileMenu, helpMenu);
-        fileMenu.getItems().addAll(importItem,teacherItem,studentItem,courseItem,saveItem,quitItem);
-        helpMenu.getItems().addAll(aboutItem,manualItem);
+        fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
+        helpMenu.getItems().addAll(aboutItem, manualItem);
         Button mainProceed = new Button("Proceed");
         ComboBox<String> selection = new ComboBox<>();
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
-        sketchuler.setStyle("-fx-font-size: 60px; " + 
-                            "-fx-text-fill:rgb(255, 157, 0); " + 
-                            "-fx-font-family: 'Caveat'; "+
-                            "-fx-font-weight: normal;"); 
+        sketchuler.setStyle("-fx-font-size: 60px; " +
+                "-fx-text-fill:rgb(255, 157, 0); " +
+                "-fx-font-family: 'Caveat'; "+
+                "-fx-font-weight: normal;");
         toCenter.getChildren().add(sketchuler);
         toBeNext.getChildren().addAll(selection, mainProceed);
-        root.getChildren().addAll(menuBar,spacer1,toCenter,spacer3,toBeNext,spacer2,forTablePadding);
+        root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
         forTablePadding.setPadding(new Insets(10));
         toBeNext.setAlignment(Pos.CENTER);
         toCenter.setAlignment(Pos.CENTER);
@@ -86,9 +86,10 @@ public class Main extends Application {
     }
 
     private void selectionResult(String selected) {
+        table.getItems().clear();
+        table.getColumns().clear();
         switch (selected) {
             case "Courses" :
-                //kursun ismi hocası klasrumu
                 TableColumn<Course, String> nameColumn = new TableColumn<>("Course Name");
                 nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -101,63 +102,83 @@ public class Main extends Application {
                     return classroom != null ? new SimpleStringProperty(classroom.getName()) : new SimpleStringProperty("No Classroom");
                 });
 
-                TableColumn<?, ?>[] columns = {nameColumn, lecturerColumn, classroomColumn};
-                System.out.println(courses.get(0).getDay());
-                table.getColumns().setAll(columns);
-                adjustSize(table, columns, 0.33333);
+                table.getColumns().setAll(nameColumn, lecturerColumn, classroomColumn);
+                adjustSize(table, new TableColumn[]{nameColumn, lecturerColumn, classroomColumn}, 0.33333);
                 table.getItems().addAll(courses);
                 break;
 
-            
+            case "Students" :
+                TableColumn<Student, String> studentNameColumn = new TableColumn<>("Student Name");
+                studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
+                TableColumn<Student, String> enrolledCoursesColumn = new TableColumn<>("Enrolled Courses");
+                enrolledCoursesColumn.setCellValueFactory(cellData -> {
+                    List<Course> enrolledCourses = cellData.getValue().getEnrolledCourses();
+                    String coursesString = enrolledCourses.stream().map(Course::getName).reduce("", (a, b) -> a.isEmpty() ? b : a + ", " + b);
+                    return new SimpleStringProperty(coursesString);
+                });
+
+                table.getColumns().setAll(studentNameColumn, enrolledCoursesColumn);
+                adjustSize(table, new TableColumn[]{studentNameColumn, enrolledCoursesColumn}, 0.5);
+                table.getItems().addAll(students);
+                break;
+
+            case "Teachers" :
+                TableColumn<Teacher, String> teacherNameColumn = new TableColumn<>("Teacher Name");
+                teacherNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+
+                TableColumn<Teacher, String> assignedCoursesColumn = new TableColumn<>("Assigned Courses");
+                assignedCoursesColumn.setCellValueFactory(cellData -> {
+                    List<Course> assignedCourses = cellData.getValue().getAssignedCourses();
+                    String coursesString = assignedCourses.stream().map(Course::getName).reduce("", (a, b) -> a.isEmpty() ? b : a + ", " + b);
+                    return new SimpleStringProperty(coursesString);
+                });
+
+                table.getColumns().setAll(teacherNameColumn, assignedCoursesColumn);
+                adjustSize(table, new TableColumn[]{teacherNameColumn, assignedCoursesColumn}, 0.5);
+                table.getItems().addAll(teachers);
+                break;
+
+            case "Classes" :
+                TableColumn<Classroom, String> classroomNameColumn = new TableColumn<>("Classroom Name");
+                classroomNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+                TableColumn<Classroom, Integer> capacityColumn = new TableColumn<>("Capacity");
+                capacityColumn.setCellValueFactory(new PropertyValueFactory<>("capacity"));
+
+                TableColumn<Classroom, String> assignedClassesColumn = new TableColumn<>("Assigned Classes");
+                assignedClassesColumn.setCellValueFactory(cellData -> {
+                    List<Course> assignedCourses = cellData.getValue().getAssignedCourses();
+                    String coursesString = assignedCourses.stream().map(Course::getName).reduce("", (a, b) -> a.isEmpty() ? b : a + ", " + b);
+                    return new SimpleStringProperty(coursesString);
+                });
+
+                table.getColumns().setAll(classroomNameColumn, capacityColumn, assignedClassesColumn);
+                adjustSize(table, new TableColumn[]{classroomNameColumn, capacityColumn, assignedClassesColumn}, 0.33333);
+                table.getItems().addAll(classrooms);
+                break;
         }
-
     }
 
-    private void adjustSize(TableView<?> table, TableColumn<?, ?>[] columns, double widthPercentage) { // to adjust tableview columns width
+    private void adjustSize(TableView<?> table, TableColumn<?, ?>[] columns, double widthPercentage) {
         for (TableColumn<?, ?> column : columns) {
             column.prefWidthProperty().bind(table.widthProperty().multiply(widthPercentage));
         }
     }
 
     public static void main(String[] args) {
-        // Initialize the DatabaseLoader
         DatabaseLoader databaseLoader = new DatabaseLoader();
         databaseLoader.start();
 
-        // Retrieve data from the loader
         courses = databaseLoader.getCourses();
         teachers = databaseLoader.getTeachers();
         students = databaseLoader.getStudents();
         classrooms = databaseLoader.getClassrooms();
 
-        // Initialize the CourseManager
         CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
-
-        // Allocate classrooms to courses
         courseManager.allocateClassrooms();
 
-        // Display results (Example output)
-         for (Course course : courses) {
-            Classroom classroom = course.getClassroom();
-            System.out.println("Course: " + course.getName() + ", Day: " + course.getDay() + ", Start Time: " + course.getStartTime() + ", Classroom: " + (classroom != null ? classroom.getName() : "Not Allocated"));
-        } /* 
-        System.out.println("\nTeachers and their courses:");
-        for (Teacher teacher : databaseLoader.getTeachers()) {
-            System.out.println("Teacher: " + teacher.getFullName());
-            for (Course course : teacher.getAssignedCourses()) {
-                System.out.println("  Course: " + course.getName());
-            }
-        }
-        System.out.println("\nStudents and their enrolled courses:");
-        for (Student student : databaseLoader.getStudents()) {
-            System.out.println("Student: " + student.getFullName());
-            for (Course course : student.getEnrolledCourses()) {
-                System.out.println("  Enrolled in: " + course.getName() + " on " + course.getDay() + " at " + course.getStartTime());
-            }
-        } */
-
         launch(args);
-
     }
 }
+
