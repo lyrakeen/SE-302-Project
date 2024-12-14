@@ -206,7 +206,7 @@ public class Main extends Application {
             Label timeStartLabel = new Label("Start Time");
             Label time = new Label(course.getTimeToStart());
             Label durationLabel = new Label("Duration");
-            Label duration = new Label(Integer.toString(course.getDuration()));
+            Label duration = new Label((course.getEndTime())); // durationa dönecek
             Label dayLabel = new Label("Day");
             Label day = new Label(course.getDay());
             Label lecturerLabel = new Label("Lecturer");

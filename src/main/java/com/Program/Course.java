@@ -53,17 +53,17 @@ public class Course {
     }
 
     private String calculateEndTime(String startTime, int durationInHours) {
+        String[] starts = {"8:30","9:25","10:20","11:15","12:10","13:05", "14:00", "14:55", "15:50","16:45", "17:40", "18:35"};
+        String[] ends = {"9:15","10:10","11:05","12:00","12:55","13:50","14:45","15:40","16:35","17:30","18:25","19:20" };
         String[] timeParts = startTime.split(":");
-        int hours = Integer.parseInt(timeParts[0]);
-        int minutes = Integer.parseInt(timeParts[1]);
-
-        hours += durationInHours;
-
-        if (hours >= 24) {
-            hours -= 24;
+        int index = durationInHours-1;
+        for(String start : starts) {
+            if (start.equals(startTime)) {
+                break;
+            } else {index++;}
         }
 
-        return String.format("%02d:%02d", hours, minutes);
+        return ends[index];
     }
 
     public String getName() {
