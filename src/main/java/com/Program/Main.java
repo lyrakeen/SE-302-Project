@@ -8,12 +8,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -21,10 +25,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextInputDialog;
 
 public class Main extends Application {
 
@@ -68,6 +68,10 @@ public class Main extends Application {
 
         Button mainProceed = new Button("Proceed");
         Button clearButton = new Button("Clear");
+        ComboBox<String> dayFilterBox = new ComboBox<>();
+        dayFilterBox.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
+        dayFilterBox.setPromptText("Filter by Day");
+
         Button searchButton = new Button("Search");
         ComboBox<String> selection = new ComboBox<>();
         selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
@@ -78,7 +82,7 @@ public class Main extends Application {
                 "-fx-font-weight: normal;");
 
         toCenter.getChildren().add(sketchuler);
-        toBeNext.getChildren().addAll(selection, mainProceed, searchButton, clearButton);
+        toBeNext.getChildren().addAll(selection, mainProceed, searchButton, dayFilterBox, clearButton);
         root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
 
         forTablePadding.setPadding(new Insets(10));
@@ -161,7 +165,30 @@ public class Main extends Application {
                     showAlert("Search is not supported for the selected tab.");
             }
         });
-        table.setOnMouseClicked(event -> {displayInfo(table.getSelectionModel().getSelectedItem());
+
+        dayFilterBox.setOnAction(e -> {
+            if (currentTab == null || !currentTab.equals("Courses")) {
+                showAlert("Day filtering is only available for Courses.");
+                return;
+            }
+
+            String selectedDay = dayFilterBox.getValue();
+            if (selectedDay == null) {
+                return;
+            }
+
+            List<Course> filteredByDay = new ArrayList<>();
+            for (Course course : courses) {
+                if (course.getDay().equalsIgnoreCase(selectedDay)) {
+                    filteredByDay.add(course);
+                }
+            }
+
+            table.getItems().setAll(filteredByDay);
+        });
+
+        table.setOnMouseClicked(event -> {
+            displayInfo(table.getSelectionModel().getSelectedItem());
         });
 
         firstStage.setTitle("Sketchuler");
@@ -169,9 +196,8 @@ public class Main extends Application {
         firstStage.show();
     }
 
-
     private void displayInfo(Object selected) {
-        if(selected instanceof Course) {
+        if (selected instanceof Course) {
             infoRoot.getChildren().clear();
 
             Course course = (Course) selected;
@@ -179,7 +205,7 @@ public class Main extends Application {
             Label name = new Label(course.getName());
             Label timeStartLabel = new Label("Start Time");
             Label time = new Label(course.getTimeToStart());
-            Label durationLabel = new Label(    "Duration");
+            Label durationLabel = new Label("Duration");
             Label duration = new Label(Integer.toString(course.getDuration()));
             Label dayLabel = new Label("Day");
             Label day = new Label(course.getDay());
@@ -200,7 +226,6 @@ public class Main extends Application {
             infoRoot.getChildren().addAll(fifth, fourth, third, second, first);
             infoStage.setScene(infoScene);
             infoStage.show();
-
         }
     }
 
@@ -208,7 +233,7 @@ public class Main extends Application {
         table.getItems().clear();
         table.getColumns().clear();
         switch (selected) {
-            case "Courses" :
+            case "Courses":
                 TableColumn<Course, String> nameColumn = new TableColumn<>("Course Name");
                 nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -226,7 +251,7 @@ public class Main extends Application {
                 table.getItems().addAll(courses);
                 break;
 
-            case "Students" :
+            case "Students":
                 TableColumn<Student, String> studentNameColumn = new TableColumn<>("Student Name");
                 studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
@@ -242,7 +267,7 @@ public class Main extends Application {
                 table.getItems().addAll(students);
                 break;
 
-            case "Teachers" :
+            case "Teachers":
                 TableColumn<Teacher, String> teacherNameColumn = new TableColumn<>("Teacher Name");
                 teacherNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
@@ -258,7 +283,7 @@ public class Main extends Application {
                 table.getItems().addAll(teachers);
                 break;
 
-            case "Classes" :
+            case "Classes":
                 TableColumn<Classroom, String> classroomNameColumn = new TableColumn<>("Classroom Name");
                 classroomNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
