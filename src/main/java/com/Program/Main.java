@@ -202,6 +202,114 @@ public class Main extends Application {
             resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
+        aboutItem.setOnAction(e -> {
+            Stage aboutStage = new Stage();
+            aboutStage.setTitle("About");
+
+            VBox aboutContent = new VBox(10);
+            aboutContent.setPadding(new Insets(10));
+
+            Label aboutTitle = new Label("About - Sketchuler");
+            aboutTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+            Label aboutText = new Label(
+                    "Sketchuler v1.0\n\n" +
+                            "Sketchuler is a scheduling application designed to help manage courses, students, " +
+                            "teachers, and classrooms efficiently.\n\n" +
+                            "- Team 13\n"
+            );
+            aboutText.setWrapText(true);
+
+            Button closeButton = new Button("Close");
+            closeButton.setOnAction(event -> aboutStage.close());
+
+            aboutContent.getChildren().addAll(aboutTitle, aboutText, closeButton);
+            aboutContent.setAlignment(Pos.CENTER);
+
+            Scene aboutScene = new Scene(aboutContent, 400, 300);
+            aboutStage.setScene(aboutScene);
+            aboutStage.show();
+        });
+
+        manualItem.setOnAction(e -> {
+            Stage manualStage = new Stage();
+            manualStage.setTitle("Manual");
+
+            // Sidebar - Bölümleri oluştur
+            VBox sidebar = new VBox(10);
+            sidebar.setPadding(new Insets(10));
+            sidebar.setPrefWidth(120);
+
+            Button gettingStartedButton = new Button("Getting Started");
+            Button navigationButton = new Button("Navigation");
+            Button searchingButton = new Button("Searching");
+            Button filteringButton = new Button("Filtering");
+
+            sidebar.getChildren().addAll(gettingStartedButton, navigationButton, searchingButton, filteringButton);
+
+            VBox detailContent = new VBox(10);
+            detailContent.setPadding(new Insets(10));
+            Label detailTitle = new Label("Welcome to the User Manual!");
+            detailTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+            Label detailText = new Label(
+                    "Select a section from the sidebar to learn more about how to use Sketchuler."
+            );
+            detailText.setWrapText(true);
+
+            detailContent.getChildren().addAll(detailTitle, detailText);
+
+            HBox manualLayout = new HBox(10);
+            manualLayout.getChildren().addAll(sidebar, detailContent);
+
+            gettingStartedButton.setOnAction(event -> {
+                detailTitle.setText("Getting Started");
+                detailText.setText(
+                        "To start using Sketchuler:\n" +
+                                "1. Select a category (Courses, Students, Teachers, Classes) from the dropdown menu.\n" +
+                                "2. Click 'Proceed' to view the selected category's data in the table.\n" +
+                                "3. Use the 'Search' or 'Filter by Day' options to refine your view."
+                );
+            });
+
+            navigationButton.setOnAction(event -> {
+                detailTitle.setText("Navigation");
+                detailText.setText(
+                        "Navigate through the application:\n" +
+                                "1. Use the menu bar for options like Import, Save, or Quit.\n" +
+                                "2. Use the dropdown menu and buttons in the main interface to explore data."
+                );
+            });
+
+            searchingButton.setOnAction(event -> {
+                detailTitle.setText("Searching");
+                detailText.setText(
+                        "Search functionality allows you to find specific items:\n" +
+                                "1. Click the 'Search' button.\n" +
+                                "2. Enter a keyword to search in the current category.\n" +
+                                "3. Results matching your search will be displayed in the table."
+                );
+            });
+
+            filteringButton.setOnAction(event -> {
+                detailTitle.setText("Filtering");
+                detailText.setText(
+                        "Filter courses by day:\n" +
+                                "1. Use the 'Filter by Day' dropdown menu.\n" +
+                                "2. Select a day (e.g., Monday, Tuesday).\n" +
+                                "3. Only courses scheduled on the selected day will be displayed."
+                );
+            });
+
+            Button closeButton = new Button("Close");
+            closeButton.setOnAction(event -> manualStage.close());
+            detailContent.getChildren().add(closeButton);
+
+            Scene manualScene = new Scene(manualLayout, 600, 400);
+            manualStage.setScene(manualScene);
+            manualStage.show();
+        });
+
         table.setOnMouseClicked(event -> {
             displayInfo(table.getSelectionModel().getSelectedItem());
         });
