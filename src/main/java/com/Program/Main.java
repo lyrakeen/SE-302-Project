@@ -85,6 +85,8 @@ public class Main extends Application {
         toCenter.getChildren().add(sketchuler);
         toBeNext.getChildren().addAll(selection, mainProceed, searchButton, dayFilterBox, clearButton);
         root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
+        Label resultCountLabel = new Label("Results: 0");
+        root.getChildren().add(resultCountLabel);
 
         forTablePadding.setPadding(new Insets(10));
         toBeNext.setAlignment(Pos.CENTER);
@@ -106,14 +108,15 @@ public class Main extends Application {
             }
             currentTab = selection.getValue();
             selectionResult(currentTab);
+            resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
         clearButton.setOnAction(e -> {
             table.getItems().clear();
             table.getColumns().clear();
             currentTab = null;
+            resultCountLabel.setText("Results: 0");
         });
-
         searchButton.setOnAction(e -> {
             if (currentTab == null) {
                 showAlert("Please select a tab before searching.");
@@ -125,7 +128,6 @@ public class Main extends Application {
                 return;
             }
 
-            // Sadece geçerli sekme "Courses" ise filtre mantığını çalıştır
             if (currentTab.equals("Courses")) {
                 List<String> selectedDays = new ArrayList<>();
                 if (dayFilterBox.getValue() != null) {
@@ -134,7 +136,6 @@ public class Main extends Application {
 
                 List<Course> filteredCourses = new ArrayList<>();
                 for (Course course : courses) {
-                    // Gün filtreleme ve arama işlemini birlikte yap
                     boolean matchesDay = selectedDays.isEmpty() || selectedDays.contains(course.getDay());
                     boolean matchesQuery = course.getName().toLowerCase().contains(query.toLowerCase());
 
@@ -144,7 +145,6 @@ public class Main extends Application {
                 }
                 table.getItems().setAll(filteredCourses);
             } else {
-                // Courses dışındaki sekmeler için sadece arama
                 switch (currentTab) {
                     case "Students":
                         List<Student> filteredStudents = new ArrayList<>();
@@ -177,6 +177,7 @@ public class Main extends Application {
                         showAlert("Search is not supported for the selected tab.");
                 }
             }
+            resultCountLabel.setText("Results: " + table.getItems().size());
         });
         dayFilterBox.setOnAction(e -> {
             if (currentTab == null || !currentTab.equals("Courses")) {
@@ -198,6 +199,7 @@ public class Main extends Application {
             }
 
             table.getItems().setAll(filteredByDay);
+            resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
         table.setOnMouseClicked(event -> {
