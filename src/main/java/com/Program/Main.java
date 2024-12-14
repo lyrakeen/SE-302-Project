@@ -71,6 +71,7 @@ public class Main extends Application {
         ComboBox<String> dayFilterBox = new ComboBox<>();
         dayFilterBox.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
         dayFilterBox.setPromptText("Filter by Day");
+        dayFilterBox.setEditable(false); // Günlerin sabit olması için
 
         Button searchButton = new Button("Search");
         ComboBox<String> selection = new ComboBox<>();
@@ -115,7 +116,7 @@ public class Main extends Application {
 
         searchButton.setOnAction(e -> {
             if (currentTab == null) {
-                showAlert("Please proceed with a selection before searching.");
+                showAlert("Please select a tab before searching.");
                 return;
             }
 
@@ -124,48 +125,59 @@ public class Main extends Application {
                 return;
             }
 
-            switch (currentTab) {
-                case "Students":
-                    List<Student> filteredStudents = new ArrayList<>();
-                    for (Student student : students) {
-                        if (student.getFullName().toLowerCase().contains(query.toLowerCase())) {
-                            filteredStudents.add(student);
-                        }
+            // Sadece geçerli sekme "Courses" ise filtre mantığını çalıştır
+            if (currentTab.equals("Courses")) {
+                List<String> selectedDays = new ArrayList<>();
+                if (dayFilterBox.getValue() != null) {
+                    selectedDays.add(dayFilterBox.getValue());
+                }
+
+                List<Course> filteredCourses = new ArrayList<>();
+                for (Course course : courses) {
+                    // Gün filtreleme ve arama işlemini birlikte yap
+                    boolean matchesDay = selectedDays.isEmpty() || selectedDays.contains(course.getDay());
+                    boolean matchesQuery = course.getName().toLowerCase().contains(query.toLowerCase());
+
+                    if (matchesDay && matchesQuery) {
+                        filteredCourses.add(course);
                     }
-                    table.getItems().setAll(filteredStudents);
-                    break;
-                case "Teachers":
-                    List<Teacher> filteredTeachers = new ArrayList<>();
-                    for (Teacher teacher : teachers) {
-                        if (teacher.getFullName().toLowerCase().contains(query.toLowerCase())) {
-                            filteredTeachers.add(teacher);
+                }
+                table.getItems().setAll(filteredCourses);
+            } else {
+                // Courses dışındaki sekmeler için sadece arama
+                switch (currentTab) {
+                    case "Students":
+                        List<Student> filteredStudents = new ArrayList<>();
+                        for (Student student : students) {
+                            if (student.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredStudents.add(student);
+                            }
                         }
-                    }
-                    table.getItems().setAll(filteredTeachers);
-                    break;
-                case "Courses":
-                    List<Course> filteredCourses = new ArrayList<>();
-                    for (Course course : courses) {
-                        if (course.getName().toLowerCase().contains(query.toLowerCase())) {
-                            filteredCourses.add(course);
+                        table.getItems().setAll(filteredStudents);
+                        break;
+                    case "Teachers":
+                        List<Teacher> filteredTeachers = new ArrayList<>();
+                        for (Teacher teacher : teachers) {
+                            if (teacher.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredTeachers.add(teacher);
+                            }
                         }
-                    }
-                    table.getItems().setAll(filteredCourses);
-                    break;
-                case "Classes":
-                    List<Classroom> filteredClassrooms = new ArrayList<>();
-                    for (Classroom classroom : classrooms) {
-                        if (classroom.getName().toLowerCase().contains(query.toLowerCase())) {
-                            filteredClassrooms.add(classroom);
+                        table.getItems().setAll(filteredTeachers);
+                        break;
+                    case "Classes":
+                        List<Classroom> filteredClassrooms = new ArrayList<>();
+                        for (Classroom classroom : classrooms) {
+                            if (classroom.getName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredClassrooms.add(classroom);
+                            }
                         }
-                    }
-                    table.getItems().setAll(filteredClassrooms);
-                    break;
-                default:
-                    showAlert("Search is not supported for the selected tab.");
+                        table.getItems().setAll(filteredClassrooms);
+                        break;
+                    default:
+                        showAlert("Search is not supported for the selected tab.");
+                }
             }
         });
-
         dayFilterBox.setOnAction(e -> {
             if (currentTab == null || !currentTab.equals("Courses")) {
                 showAlert("Day filtering is only available for Courses.");
@@ -174,6 +186,7 @@ public class Main extends Application {
 
             String selectedDay = dayFilterBox.getValue();
             if (selectedDay == null) {
+                showAlert("Please select a day for filtering.");
                 return;
             }
 
