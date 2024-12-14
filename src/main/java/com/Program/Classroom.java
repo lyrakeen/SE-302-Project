@@ -36,10 +36,19 @@ public class Classroom {
 
     public boolean isConflicting(Course course) {
         for (Course scheduledCourse : schedule) {
-            if (scheduledCourse.getDay().equals(course.getDay()) &&
-                    !(scheduledCourse.getEndTime().compareTo(course.getStartTime()) <= 0 ||
-                            scheduledCourse.getStartTime().compareTo(course.getEndTime()) >= 0)) {
-                return true;
+            if (scheduledCourse.getDay().equals(course.getDay())) { 
+
+                String[] schParts = scheduledCourse.getEndTime().split(":"); //scheduled course parts
+                int[] intSch = {Integer.parseInt(schParts[0]), Integer.parseInt(schParts[1])}; // scheduled course time parts converted to int
+   
+                String[] cParts = course.getStartTime().split(":"); // course parts
+                int[] intCo = {Integer.parseInt(cParts[0]), Integer.parseInt(cParts[1])}; //  course time parts converted to int
+
+                if (!(intCo[0] > intSch[0])) {
+                    if (!(intCo[0] > intSch[0])){
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -47,5 +56,10 @@ public class Classroom {
 
     public void addCourse(Course course) {
         schedule.add(course);
+    }
+
+    public List<Course> getAssignedCourses() {
+        // `schedule` içeriğini `getAssignedCourses` adıyla döndürüyoruz.
+        return new ArrayList<>(schedule);
     }
 }

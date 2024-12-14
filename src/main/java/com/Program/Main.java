@@ -1,42 +1,32 @@
 package com.Program;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.stage.FileChooser;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
-import javafx.animation.ScaleTransition;
-import javafx.util.Duration;
-import javafx.scene.paint.Color;
-
-import java.io.*;
-import java.time.LocalDate;
-import java.util.*;
-
-
-import com.google.gson.Gson;
-
-import javafx.collections.ObservableList;
-import javafx.collections.FXCollections;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class Main extends Application {
-<<<<<<< Updated upstream
-    VBox root = new VBox();
-    Stage firStage = new Stage();
-    Scene scene = new Scene(root, 300, 400);
-=======
 
     static List<Course> courses;
     static Set<Teacher> teachers;
@@ -44,11 +34,12 @@ public class Main extends Application {
     static List<Classroom> classrooms;
 
     VBox root = new VBox(10);
+    VBox infoRoot = new VBox(10);
     HBox toBeNext = new HBox(10);
     HBox toCenter = new HBox(10);
     TableView table = new TableView<>();
     HBox forTablePadding = new HBox(table);
-    Scene scene = new Scene(root, 900, 500);
+    Scene scene = new Scene(root, 600, 400);
     MenuBar menuBar = new MenuBar();
     Menu fileMenu = new Menu("File");
     Menu helpMenu = new Menu("Help");
@@ -64,21 +55,198 @@ public class Main extends Application {
     Region spacer2 = new Region();
     Region spacer3 = new Region();
     Label sketchuler = new Label("Sketchuler");
->>>>>>> Stashed changes
+    Stage infoStage = new Stage();
+    Scene infoScene = new Scene(infoRoot);
+
+    private String currentTab = null;
 
     @Override
     public void start(Stage firstStage) {
+        menuBar.getMenus().addAll(fileMenu, helpMenu);
+        fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
+        helpMenu.getItems().addAll(aboutItem, manualItem);
+
+        Button mainProceed = new Button("Proceed");
+        Button clearButton = new Button("Clear");
+        ComboBox<String> dayFilterBox = new ComboBox<>();
+        dayFilterBox.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
+        dayFilterBox.setPromptText("Filter by Day");
+        dayFilterBox.setEditable(false); // Günlerin sabit olması için
+
+        Button searchButton = new Button("Search");
+        ComboBox<String> selection = new ComboBox<>();
+        selection.getItems().addAll("Courses", "Students", "Teachers", "Classes");
+
+        sketchuler.setStyle("-fx-font-size: 60px; " +
+                "-fx-text-fill:rgb(255, 157, 0); " +
+                "-fx-font-family: 'Caveat'; "+
+                "-fx-font-weight: normal;");
+
+        toCenter.getChildren().add(sketchuler);
+        toBeNext.getChildren().addAll(selection, mainProceed, searchButton, dayFilterBox, clearButton);
+        root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
+
+        forTablePadding.setPadding(new Insets(10));
+        toBeNext.setAlignment(Pos.CENTER);
+        toCenter.setAlignment(Pos.CENTER);
+
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+        VBox.setVgrow(spacer1, Priority.ALWAYS);
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+        VBox.setVgrow(spacer2, Priority.ALWAYS);
+        HBox.setHgrow(spacer3, Priority.ALWAYS);
+        VBox.setVgrow(spacer3, Priority.ALWAYS);
+        HBox.setHgrow(table, Priority.ALWAYS);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        mainProceed.setOnAction(e -> {
+            if (selection.getValue() == null) {
+                showAlert("Please select an option before proceeding.");
+                return;
+            }
+            currentTab = selection.getValue();
+            selectionResult(currentTab);
+        });
+
+        clearButton.setOnAction(e -> {
+            table.getItems().clear();
+            table.getColumns().clear();
+            currentTab = null;
+        });
+
+        searchButton.setOnAction(e -> {
+            if (currentTab == null) {
+                showAlert("Please select a tab before searching.");
+                return;
+            }
+
+            String query = showInputDialog("Enter search term for " + currentTab);
+            if (query == null || query.isEmpty()) {
+                return;
+            }
+
+            // Sadece geçerli sekme "Courses" ise filtre mantığını çalıştır
+            if (currentTab.equals("Courses")) {
+                List<String> selectedDays = new ArrayList<>();
+                if (dayFilterBox.getValue() != null) {
+                    selectedDays.add(dayFilterBox.getValue());
+                }
+
+                List<Course> filteredCourses = new ArrayList<>();
+                for (Course course : courses) {
+                    // Gün filtreleme ve arama işlemini birlikte yap
+                    boolean matchesDay = selectedDays.isEmpty() || selectedDays.contains(course.getDay());
+                    boolean matchesQuery = course.getName().toLowerCase().contains(query.toLowerCase());
+
+                    if (matchesDay && matchesQuery) {
+                        filteredCourses.add(course);
+                    }
+                }
+                table.getItems().setAll(filteredCourses);
+            } else {
+                // Courses dışındaki sekmeler için sadece arama
+                switch (currentTab) {
+                    case "Students":
+                        List<Student> filteredStudents = new ArrayList<>();
+                        for (Student student : students) {
+                            if (student.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredStudents.add(student);
+                            }
+                        }
+                        table.getItems().setAll(filteredStudents);
+                        break;
+                    case "Teachers":
+                        List<Teacher> filteredTeachers = new ArrayList<>();
+                        for (Teacher teacher : teachers) {
+                            if (teacher.getFullName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredTeachers.add(teacher);
+                            }
+                        }
+                        table.getItems().setAll(filteredTeachers);
+                        break;
+                    case "Classes":
+                        List<Classroom> filteredClassrooms = new ArrayList<>();
+                        for (Classroom classroom : classrooms) {
+                            if (classroom.getName().toLowerCase().contains(query.toLowerCase())) {
+                                filteredClassrooms.add(classroom);
+                            }
+                        }
+                        table.getItems().setAll(filteredClassrooms);
+                        break;
+                    default:
+                        showAlert("Search is not supported for the selected tab.");
+                }
+            }
+        });
+        dayFilterBox.setOnAction(e -> {
+            if (currentTab == null || !currentTab.equals("Courses")) {
+                showAlert("Day filtering is only available for Courses.");
+                return;
+            }
+
+            String selectedDay = dayFilterBox.getValue();
+            if (selectedDay == null) {
+                showAlert("Please select a day for filtering.");
+                return;
+            }
+
+            List<Course> filteredByDay = new ArrayList<>();
+            for (Course course : courses) {
+                if (course.getDay().equalsIgnoreCase(selectedDay)) {
+                    filteredByDay.add(course);
+                }
+            }
+
+            table.getItems().setAll(filteredByDay);
+        });
+
+        table.setOnMouseClicked(event -> {
+            displayInfo(table.getSelectionModel().getSelectedItem());
+        });
+
+        firstStage.setTitle("Sketchuler");
         firstStage.setScene(scene);
         firstStage.show();
     }
 
-<<<<<<< Updated upstream
-=======
+    private void displayInfo(Object selected) {
+        if (selected instanceof Course) {
+            infoRoot.getChildren().clear();
+
+            Course course = (Course) selected;
+            Label nameLabel = new Label("Name");
+            Label name = new Label(course.getName());
+            Label timeStartLabel = new Label("Start Time");
+            Label time = new Label(course.getTimeToStart());
+            Label durationLabel = new Label("Duration");
+            Label duration = new Label((course.getEndTime())); // durationa dönecek
+            Label dayLabel = new Label("Day");
+            Label day = new Label(course.getDay());
+            Label lecturerLabel = new Label("Lecturer");
+            Label lecturer = new Label(course.getLecturer());
+
+            HBox first = new HBox(5);
+            HBox second = new HBox(5);
+            HBox third = new HBox(5);
+            HBox fourth = new HBox(5);
+            HBox fifth = new HBox(5);
+
+            first.getChildren().addAll(nameLabel, name);
+            second.getChildren().addAll(timeStartLabel, time);
+            third.getChildren().addAll(durationLabel, duration);
+            fourth.getChildren().addAll(dayLabel, day);
+            fifth.getChildren().addAll(lecturerLabel, lecturer);
+            infoRoot.getChildren().addAll(fifth, fourth, third, second, first);
+            infoStage.setScene(infoScene);
+            infoStage.show();
+        }
+    }
+
     private void selectionResult(String selected) {
         table.getItems().clear();
         table.getColumns().clear();
         switch (selected) {
-            case "Courses" :
+            case "Courses":
                 TableColumn<Course, String> nameColumn = new TableColumn<>("Course Name");
                 nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -96,7 +264,7 @@ public class Main extends Application {
                 table.getItems().addAll(courses);
                 break;
 
-            case "Students" :
+            case "Students":
                 TableColumn<Student, String> studentNameColumn = new TableColumn<>("Student Name");
                 studentNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
@@ -112,7 +280,7 @@ public class Main extends Application {
                 table.getItems().addAll(students);
                 break;
 
-            case "Teachers" :
+            case "Teachers":
                 TableColumn<Teacher, String> teacherNameColumn = new TableColumn<>("Teacher Name");
                 teacherNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
@@ -128,14 +296,14 @@ public class Main extends Application {
                 table.getItems().addAll(teachers);
                 break;
 
-            case "Classes" :
+            case "Classes":
                 TableColumn<Classroom, String> classroomNameColumn = new TableColumn<>("Classroom Name");
                 classroomNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
                 TableColumn<Classroom, Integer> capacityColumn = new TableColumn<>("Capacity");
                 capacityColumn.setCellValueFactory(new PropertyValueFactory<>("capacity"));
 
-                TableColumn<Classroom, String> assignedClassesColumn = new TableColumn<>("Assigned Courses");
+                TableColumn<Classroom, String> assignedClassesColumn = new TableColumn<>("Assigned Classes");
                 assignedClassesColumn.setCellValueFactory(cellData -> {
                     List<Course> assignedCourses = cellData.getValue().getAssignedCourses();
                     String coursesString = assignedCourses.stream().map(Course::getName).reduce("", (a, b) -> a.isEmpty() ? b : a + ", " + b);
@@ -155,8 +323,34 @@ public class Main extends Application {
         }
     }
 
->>>>>>> Stashed changes
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Information");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private String showInputDialog(String prompt) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Search");
+        dialog.setHeaderText(prompt);
+        dialog.setContentText("Search term:");
+        return dialog.showAndWait().orElse(null);
+    }
+
     public static void main(String[] args) {
+        DatabaseLoader databaseLoader = new DatabaseLoader();
+        databaseLoader.start();
+
+        courses = databaseLoader.getCourses();
+        teachers = databaseLoader.getTeachers();
+        students = databaseLoader.getStudents();
+        classrooms = databaseLoader.getClassrooms();
+
+        CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
+        courseManager.allocateClassrooms();
+
         launch(args);
     }
 }

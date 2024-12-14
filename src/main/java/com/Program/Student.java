@@ -38,7 +38,9 @@ public class Student {
     }
 
     public void enrollCourse(Course course) {
-        enrolledCourses.add(course);
+        if (!enrolledCourses.contains(course)) { // Kurs zaten kayıtlı değilse ekle
+            enrolledCourses.add(course);
+        }
     }
 
     public void dropCourse(Course course) {

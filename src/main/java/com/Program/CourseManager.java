@@ -17,10 +17,15 @@ public class CourseManager {
 
     public void allocateClassrooms() {
         for (Course course : courses) {
+            Classroom cmax;
             for (Classroom classroom : classrooms) {
+                cmax = classroom;
                 if (classroom.getCapacity() >= course.getStudents().size() && !classroom.isConflicting(course)) {
-                    classroom.addCourse(course);
-                    course.setClassroom(classroom);
+                    if (cmax.getCapacity() > classroom.getCapacity()) {
+                        cmax = classroom;
+                    }
+                    cmax.addCourse(course);
+                    course.setClassroom(cmax);
                     break;
                 }
             }
