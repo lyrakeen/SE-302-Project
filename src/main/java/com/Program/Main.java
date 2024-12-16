@@ -1,5 +1,6 @@
 package com.Program;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,9 +41,9 @@ public class Main extends Application {
     static Set<Teacher> teachers;
     static Set<Student> students;
     static List<Classroom> classrooms;
+    static DatabaseLoader databaseLoader = new DatabaseLoader();
     List<Student> courseStudents;
     List<String> studentNames;
-
     VBox root = new VBox(10);
     VBox infoRoot = new VBox(10);
     HBox toBeNext = new HBox(10);
@@ -268,8 +269,19 @@ public class Main extends Application {
 
         /* metotları halledince çalıştırırsın
         editC.setOnAction(e -> {burayametotismigelecek(courseLists.getSelectionModel());}); 
-        deleteC.setOnAction(e -> {burayadametotismigelcek(courseLists.getSelectionModel());});
+
         */
+        deleteC.setOnAction(e -> {
+            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
+            if(selectedCourse !=null){
+                try {
+                    databaseLoader.deleteCourse(selectedCourse.getName());
+                    courseLists.getItems().remove(selectedCourse);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
         forButtons.setAlignment(Pos.CENTER);
 
         mcBox.getChildren().addAll(courseLists, forButtons); 
@@ -595,7 +607,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        DatabaseLoader databaseLoader = new DatabaseLoader();
+
         databaseLoader.start();
 
         courses = databaseLoader.getCourses();
@@ -604,7 +616,7 @@ public class Main extends Application {
         classrooms = databaseLoader.getClassrooms();
 
         CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
-        courseManager.allocateClassrooms();
+        courseManager.allocateClassrooms(databaseLoader);
 
         launch(args);
     }

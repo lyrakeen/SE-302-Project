@@ -15,9 +15,9 @@ public class CourseManager {
         this.classrooms = classrooms;
     }
 
-    public void allocateClassrooms() {
+    public void allocateClassrooms(DatabaseLoader databaseLoader) {
         for (Course course : courses) {
-            Classroom cmax;
+            Classroom cmax=null;
             for (Classroom classroom : classrooms) {
                 cmax = classroom;
                 if (classroom.getCapacity() >= course.getStudents().size() && !classroom.isConflicting(course)) {
@@ -29,7 +29,9 @@ public class CourseManager {
                     break;
                 }
             }
+            databaseLoader.updateCourseClassroom(course.getName(), cmax.getName());
         }
+
     }
 
     public void addCourse(Course course) {
