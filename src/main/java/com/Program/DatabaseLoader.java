@@ -12,6 +12,7 @@ public class DatabaseLoader {
     private Set<Teacher> teachers = new HashSet<>();
 
     private List<Classroom> classrooms = new ArrayList<>();
+
     public  void start() {
         String coursesFilePath="Courses.csv";
         String classroomFilePath="ClassroomCapacity.csv";
@@ -49,7 +50,8 @@ public class DatabaseLoader {
                 "duration_in_lecture_hours INTEGER," +
                 "lecturer TEXT," +
                 "students TEXT," +
-                "student_count INTEGER)";
+                "student_count INTEGER," +
+                "classroom_name TEXT)";
 
         String createClassroomTable = "CREATE TABLE IF NOT EXISTS classroom_capacity (" +
                 "classroom_name TEXT," +
@@ -129,7 +131,15 @@ public class DatabaseLoader {
                 int duration = rs.getInt("duration_in_lecture_hours");
                 String lecturer = rs.getString("lecturer");
                 String students = rs.getString("students");
-
+                String classroomName = rs.getString("classroom_name");
+                // Classroom nesnesini oluştur
+                Classroom classroom = null;
+                if (classroomName != null && !classroomName.isEmpty()) {
+                    classroom = classrooms.stream()
+                            .filter(c -> c.getName().equals(classroomName))
+                            .findFirst()
+                            .orElse(new Classroom(classroomName, 0)); // Classroom kapasitesini bilmiyorsak 0 veririz
+                }
                 // Duplicate kontrolü
                 boolean alreadyExists = courses.stream()
                         .anyMatch(course -> course.getName().equals(courseName) &&
@@ -137,6 +147,7 @@ public class DatabaseLoader {
                                 course.getLecturer().equals(lecturer));
                 if (!alreadyExists) {
                     Course course = new Course(courseName, timeToStart, duration, lecturer, students);
+                    course.setClassroom(classroom);
                     courses.add(course);
                 }
             }
@@ -193,6 +204,30 @@ public class DatabaseLoader {
                 }
             }
         }
+    }
+    public void updateCourseClassroom(String courseName, String classroomName){
+        try(Connection connection =DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            String updateSQL = "UPDATE courses SET classroom_name = ? WHERE course_name = ?";
+            try(PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
+                preparedStatement.setString(1, classroomName);
+                preparedStatement.setString(2, courseName);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void deleteCourse(String courseName) throws SQLException{
+        //Veritabanından silme:
+        try(Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            String deleteSQl = "DELETE FROM courses WHERE course_name = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSQl)) {
+                preparedStatement.setString(1, courseName);
+                preparedStatement.executeUpdate();
+            }
+        }
+    //Bellek ve CourseManager içinden silme
+        courses.removeIf(course -> course.getName().equals(courseName));
     }
 
     // Getters
