@@ -1,12 +1,15 @@
 package com.Program;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.util.Callback;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -320,8 +323,101 @@ public class Main extends Application {
             infoRoot.getChildren().addAll(nextBox);
             infoStage.setScene(infoScene);
             infoStage.show();
+        } if (selected instanceof Student) {
+            Student student = (Student) selected;
+            infoRoot.getChildren().clear();
+        
+            TableView<String[]> table = new TableView<>();
+        
+            String[] mondayArr = new String[12];
+            String[] tuesdayArr = new String[12];
+            String[] wednesdayArr = new String[12];
+            String[] thursdayArr = new String[12];
+            String[] fridayArr = new String[12];
+        
+            String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
+        
+            ObservableList<Course> mondayData = FXCollections.observableArrayList();
+            ObservableList<Course> tuesdayData = FXCollections.observableArrayList();
+            ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
+            ObservableList<Course> thursdayData = FXCollections.observableArrayList();
+            ObservableList<Course> fridayData = FXCollections.observableArrayList();
+        
+            for (Course course : student.getEnrolledCourses()) {
+                if (course.getDay().equals("Monday")) {
+                    mondayData.add(course);
+                }
+                if (course.getDay().equals("Tuesday")) {
+                    tuesdayData.add(course);
+                }
+                if (course.getDay().equals("Wednesday")) {
+                    wednesdayData.add(course);
+                }
+                if (course.getDay().equals("Thursday")) {
+                    thursdayData.add(course);
+                }
+                if (course.getDay().equals("Friday")) {
+                    fridayData.add(course);
+                }
+            }
+        
+            // Monday, Tuesday, Wednesday, Thursday, Friday verilerini dolduruyoruz.
+            fillDayData(mondayData, mondayArr, startTimes);
+            fillDayData(tuesdayData, tuesdayArr, startTimes);
+            fillDayData(wednesdayData, wednesdayArr, startTimes);
+            fillDayData(thursdayData, thursdayArr, startTimes);
+            fillDayData(fridayData, fridayArr, startTimes);
+        
+            // Sütunlar ve başlıklar
+            TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
+            timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
+            table.getColumns().add(timeColumn);
+        
+            // Günler için sütunlar
+            addDayColumn(table, "Monday", mondayArr);
+            addDayColumn(table, "Tuesday", tuesdayArr);
+            addDayColumn(table, "Wednesday", wednesdayArr);
+            addDayColumn(table, "Thursday", thursdayArr);
+            addDayColumn(table, "Friday", fridayArr);
+        
+            // Zaman dilimleri ve kurs adlarını tabloya ekleme
+            for (int i = 0; i < 12; i++) {
+                String[] row = new String[6];
+                row[0] = startTimes[i];
+                row[1] = mondayArr[i];
+                row[2] = tuesdayArr[i];
+                row[3] = wednesdayArr[i];
+                row[4] = thursdayArr[i];
+                row[5] = fridayArr[i];
+                table.getItems().add(row);
+            }
+        
+            adjustSize(table, new TableColumn[]{timeColumn}, 0.16);
+            infoRoot.getChildren().addAll(table);
+            infoStage.setScene(infoScene);
+            infoStage.show();
         }
     }
+        
+        private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
+            for (Course course : dayData) {
+                int index = 0;
+                for (int i = 0; i < 12; i++) {
+                    if (course.getStartTime().equals(startTimes[i])) {
+                        index = i;
+                    }
+                }
+                for (int j = index; j < course.getDuration(); j++) {
+                    dayArr[j] = course.getName();
+                }
+            }
+        }
+
+    private void addDayColumn(TableView<String[]> table, String day, String[] dayArr) {
+        TableColumn<String[], String> dayColumn = new TableColumn<>(day);
+        dayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday").indexOf(day) + 1]));
+        table.getColumns().add(dayColumn);
+    }   
 
     private void showManual() {
         manualStage.setTitle("Manual");
@@ -388,7 +484,7 @@ public class Main extends Application {
                         "Filter courses by day:\n" +
                                 "1. Use the 'Filter by Day' dropdown menu.\n" +
                                 "2. Select a day (e.g., Monday, Tuesday).\n" +
-                                "3. Only courses scheduled on the selected day will be displayed."
+                                "3. Only courses Studentd on the selected day will be displayed."
                 );
             });
 
