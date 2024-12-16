@@ -1,5 +1,6 @@
 package com.Program;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,11 +34,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.geometry.Pos;
 
 public class Main extends Application {
 
@@ -45,9 +41,9 @@ public class Main extends Application {
     static Set<Teacher> teachers;
     static Set<Student> students;
     static List<Classroom> classrooms;
+    static DatabaseLoader databaseLoader = new DatabaseLoader();
     List<Student> courseStudents;
     List<String> studentNames;
-
     VBox root = new VBox(10);
     VBox infoRoot = new VBox(10);
     HBox toBeNext = new HBox(10);
@@ -273,9 +269,19 @@ public class Main extends Application {
 
         /* metotları halledince çalıştırırsın
         editC.setOnAction(e -> {burayametotismigelecek(courseLists.getSelectionModel());}); 
-        deleteC.setOnAction(e -> {burayadametotismigelcek(courseLists.getSelectionModel());});
+
         */
-        
+        deleteC.setOnAction(e -> {
+            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
+            if(selectedCourse !=null){
+                try {
+                    databaseLoader.deleteCourse(selectedCourse.getName());
+                    courseLists.getItems().remove(selectedCourse);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
         forButtons.setAlignment(Pos.CENTER);
 
         mcBox.getChildren().addAll(courseLists, forButtons); 
@@ -348,7 +354,7 @@ public class Main extends Application {
             ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
             ObservableList<Course> thursdayData = FXCollections.observableArrayList();
             ObservableList<Course> fridayData = FXCollections.observableArrayList();
-
+        
             for (Course course : student.getEnrolledCourses()) {
                 if (course.getDay().equals("Monday")) {
                     mondayData.add(course);
@@ -366,115 +372,27 @@ public class Main extends Application {
                     fridayData.add(course);
                 }
             }
-
+        
+            // Monday, Tuesday, Wednesday, Thursday, Friday verilerini dolduruyoruz.
             fillDayData(mondayData, mondayArr, startTimes);
             fillDayData(tuesdayData, tuesdayArr, startTimes);
             fillDayData(wednesdayData, wednesdayArr, startTimes);
             fillDayData(thursdayData, thursdayArr, startTimes);
             fillDayData(fridayData, fridayArr, startTimes);
-
+        
+            // Sütunlar ve başlıklar
             TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
             timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
-            timeColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER); 
-                        }
-                    }
-                };
-                return cell;
-            });
             table.getColumns().add(timeColumn);
-
-            TableColumn<String[], String> mondayColumn = new TableColumn<>("Monday");
-            mondayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1]));
-            mondayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER); 
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(mondayColumn);
-
-            TableColumn<String[], String> tuesdayColumn = new TableColumn<>("Tuesday");
-            tuesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2]));
-            tuesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER); 
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(tuesdayColumn);
-
-            TableColumn<String[], String> wednesdayColumn = new TableColumn<>("Wednesday");
-            wednesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3]));
-            wednesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(wednesdayColumn);
-
-            TableColumn<String[], String> thursdayColumn = new TableColumn<>("Thursday");
-            thursdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4]));
-            thursdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER); 
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(thursdayColumn);
-
-            TableColumn<String[], String> fridayColumn = new TableColumn<>("Friday");
-            fridayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5]));
-            fridayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER); 
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(fridayColumn);
         
+            // Günler için sütunlar
+            addDayColumn(table, "Monday", mondayArr);
+            addDayColumn(table, "Tuesday", tuesdayArr);
+            addDayColumn(table, "Wednesday", wednesdayArr);
+            addDayColumn(table, "Thursday", thursdayArr);
+            addDayColumn(table, "Friday", fridayArr);
+        
+            // Zaman dilimleri ve kurs adlarını tabloya ekleme
             for (int i = 0; i < 12; i++) {
                 String[] row = new String[6];
                 row[0] = startTimes[i];
@@ -486,36 +404,37 @@ public class Main extends Application {
                 table.getItems().add(row);
             }
         
-            adjustSize(table, new TableColumn[]{timeColumn,mondayColumn,tuesdayColumn,wednesdayColumn,thursdayColumn,fridayColumn}, 0.16);
+            adjustSize(table, new TableColumn[]{timeColumn}, 0.16);
             infoRoot.getChildren().addAll(table);
             infoStage.setScene(infoScene);
             infoStage.show();
         }
     }
-
+        
         private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
             for (Course course : dayData) {
-                int index = -1;
-                for (int i = 0; i < startTimes.length; i++) {
+                int index = 0;
+                for (int i = 0; i < 12; i++) {
                     if (course.getStartTime().equals(startTimes[i])) {
                         index = i;
-                        break;
                     }
                 }
-                if (index != -1) {
-                    for (int j = index; j < index + course.getDuration(); j++) {
-                        if (j < 12) { 
-                            dayArr[j] = course.getName();
-                        }
-                    }
+                for (int j = index; j < course.getDuration(); j++) {
+                    dayArr[j] = course.getName();
                 }
             }
         }
-        
+
+    private void addDayColumn(TableView<String[]> table, String day, String[] dayArr) {
+        TableColumn<String[], String> dayColumn = new TableColumn<>(day);
+        dayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday").indexOf(day) + 1]));
+        table.getColumns().add(dayColumn);
+    }   
 
     private void showManual() {
         manualStage.setTitle("Manual");
 
+            // Sidebar - Bölümleri oluştur
             VBox sidebar = new VBox(10);
             sidebar.setPadding(new Insets(10));
             sidebar.setPrefWidth(120);
@@ -688,7 +607,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        DatabaseLoader databaseLoader = new DatabaseLoader();
+
         databaseLoader.start();
 
         courses = databaseLoader.getCourses();
@@ -697,7 +616,7 @@ public class Main extends Application {
         classrooms = databaseLoader.getClassrooms();
 
         CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
-        courseManager.allocateClassrooms();
+        courseManager.allocateClassrooms(databaseLoader);
 
         launch(args);
     }
