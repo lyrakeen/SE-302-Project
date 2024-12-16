@@ -3,15 +3,20 @@ package com.Program;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import javafx.util.Callback;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -32,6 +37,8 @@ public class Main extends Application {
     static Set<Teacher> teachers;
     static Set<Student> students;
     static List<Classroom> classrooms;
+    List<Student> courseStudents;
+    List<String> studentNames;
 
     VBox root = new VBox(10);
     VBox infoRoot = new VBox(10);
@@ -56,6 +63,7 @@ public class Main extends Application {
     Region spacer3 = new Region();
     Label sketchuler = new Label("Sketchuler");
     Stage infoStage = new Stage();
+    Stage manualStage = new Stage();
     Scene infoScene = new Scene(infoRoot);
 
     private String currentTab = null;
@@ -65,6 +73,8 @@ public class Main extends Application {
         menuBar.getMenus().addAll(fileMenu, helpMenu);
         fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
         helpMenu.getItems().addAll(aboutItem, manualItem);
+
+        courseItem.setOnAction(e -> {managingCourses();});
 
         Button mainProceed = new Button("Proceed");
         Button clearButton = new Button("Clear");
@@ -179,6 +189,7 @@ public class Main extends Application {
             }
             resultCountLabel.setText("Results: " + table.getItems().size());
         });
+
         dayFilterBox.setOnAction(e -> {
             if (currentTab == null || !currentTab.equals("Courses")) {
                 showAlert("Day filtering is only available for Courses.");
@@ -203,37 +214,117 @@ public class Main extends Application {
         });
 
         aboutItem.setOnAction(e -> {
-            Stage aboutStage = new Stage();
-            aboutStage.setTitle("About");
-
-            VBox aboutContent = new VBox(10);
-            aboutContent.setPadding(new Insets(10));
-
-            Label aboutTitle = new Label("About - Sketchuler");
-            aboutTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-            Label aboutText = new Label(
-                    "Sketchuler v1.0\n\n" +
-                            "Sketchuler is a scheduling application designed to help manage courses, students, " +
-                            "teachers, and classrooms efficiently.\n\n" +
-                            "- Team 13\n"
-            );
-            aboutText.setWrapText(true);
-
-            Button closeButton = new Button("Close");
-            closeButton.setOnAction(event -> aboutStage.close());
-
-            aboutContent.getChildren().addAll(aboutTitle, aboutText, closeButton);
-            aboutContent.setAlignment(Pos.CENTER);
-
-            Scene aboutScene = new Scene(aboutContent, 400, 300);
-            aboutStage.setScene(aboutScene);
-            aboutStage.show();
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setHeaderText("About Sketchuler");
+            alert.setContentText(
+                    "This application is made for scheduling courses with classrooms efficently. It is the project of the course SE 302.");
+            alert.setTitle("About");
+            alert.showAndWait();
         });
 
-        manualItem.setOnAction(e -> {
-            Stage manualStage = new Stage();
-            manualStage.setTitle("Manual");
+        manualItem.setOnAction(e -> {showManual();
+        });
+
+        table.setOnMouseClicked(event -> {
+            displayInfo(table.getSelectionModel().getSelectedItem());
+        });
+
+        firstStage.setTitle("Sketchuler");
+        firstStage.setScene(scene);
+        firstStage.show();
+    }
+
+    private void managingCourses() {
+        HBox forButtons = new HBox(5);
+        VBox mcBox = new VBox(5);
+        Stage mcs = new Stage();
+        Scene mcSc = new Scene(mcBox);
+
+        ListView<Course> courseLists = new ListView<>();
+        courseLists.getItems().addAll(courses);
+        courseLists.setCellFactory(new Callback<>() {
+            @Override
+            public ListCell<Course> call(ListView<Course> listView) {
+                return new ListCell<>() {
+                    @Override
+                    protected void updateItem(Course course, boolean empty) {
+                        super.updateItem(course, empty);
+                        if (empty || course == null) {
+                            setText(null);
+                        } else {
+                            setText(course.getName());
+                        }
+                    }
+                };
+            }
+        });
+
+        Button editC = new Button("Edit");
+        Button deleteC = new Button("Delete");
+        forButtons.getChildren().addAll(editC, deleteC);
+
+        /* metotları halledince çalıştırırsın
+        editC.setOnAction(e -> {burayametotismigelecek(courseLists.getSelectionModel());}); 
+        deleteC.setOnAction(e -> {burayadametotismigelcek(courseLists.getSelectionModel());});
+        */
+        forButtons.setAlignment(Pos.CENTER);
+
+        mcBox.getChildren().addAll(courseLists, forButtons); 
+        mcs.setScene(mcSc);
+        mcs.show();
+    }
+
+    private void displayInfo(Object selected) {
+        if (selected instanceof Course) {
+            infoRoot.getChildren().clear();
+            try {
+                courseStudents.clear();
+                studentNames.clear();
+            } catch (Exception e){}
+
+            Course course = (Course) selected;
+            Label nameLabel = new Label("Name :");
+            Label name = new Label(course.getName());
+            Label timeStartLabel = new Label("Start Time :");
+            Label time = new Label(course.getTimeToStart());
+            Label durationLabel = new Label("Duration :");
+            Label duration = new Label((Integer.toString(course.getDuration()))); // durationa dönecek
+            Label dayLabel = new Label("Day :");
+            Label day = new Label(course.getDay());
+            Label lecturerLabel = new Label("Lecturer :");
+            Label lecturer = new Label(course.getLecturer());
+            ListView studentList = new ListView<>();
+            List<Student> students = course.getStudents();
+            List<String> studentNames = students.stream().map(Student::getFullName).collect(Collectors.toList());
+            studentList.getItems().addAll(studentNames);
+            
+            HBox nextBox = new HBox(5);
+            VBox allIn = new VBox(5);
+            HBox first = new HBox(5);
+            HBox second = new HBox(5);
+            HBox third = new HBox(5);
+            HBox fourth = new HBox(5);
+            HBox fifth = new HBox(5);
+
+            infoRoot.setAlignment(Pos.CENTER);
+            allIn.setAlignment(Pos.CENTER);
+            nextBox.setAlignment(Pos.CENTER);
+
+            first.getChildren().addAll(nameLabel, name);
+            second.getChildren().addAll(timeStartLabel, time);
+            third.getChildren().addAll(durationLabel, duration);
+            fourth.getChildren().addAll(dayLabel, day);
+            fifth.getChildren().addAll(lecturerLabel, lecturer);
+            allIn.getChildren().addAll(fifth, fourth, third, second, first);
+            nextBox.getChildren().addAll(allIn, studentList);
+            infoRoot.getChildren().addAll(nextBox);
+            infoStage.setScene(infoScene);
+            infoStage.show();
+        }
+    }
+
+    private void showManual() {
+        manualStage.setTitle("Manual");
 
             // Sidebar - Bölümleri oluştur
             VBox sidebar = new VBox(10);
@@ -308,48 +399,6 @@ public class Main extends Application {
             Scene manualScene = new Scene(manualLayout, 600, 400);
             manualStage.setScene(manualScene);
             manualStage.show();
-        });
-
-        table.setOnMouseClicked(event -> {
-            displayInfo(table.getSelectionModel().getSelectedItem());
-        });
-
-        firstStage.setTitle("Sketchuler");
-        firstStage.setScene(scene);
-        firstStage.show();
-    }
-
-    private void displayInfo(Object selected) {
-        if (selected instanceof Course) {
-            infoRoot.getChildren().clear();
-
-            Course course = (Course) selected;
-            Label nameLabel = new Label("Name");
-            Label name = new Label(course.getName());
-            Label timeStartLabel = new Label("Start Time");
-            Label time = new Label(course.getTimeToStart());
-            Label durationLabel = new Label("Duration");
-            Label duration = new Label((course.getEndTime())); // durationa dönecek
-            Label dayLabel = new Label("Day");
-            Label day = new Label(course.getDay());
-            Label lecturerLabel = new Label("Lecturer");
-            Label lecturer = new Label(course.getLecturer());
-
-            HBox first = new HBox(5);
-            HBox second = new HBox(5);
-            HBox third = new HBox(5);
-            HBox fourth = new HBox(5);
-            HBox fifth = new HBox(5);
-
-            first.getChildren().addAll(nameLabel, name);
-            second.getChildren().addAll(timeStartLabel, time);
-            third.getChildren().addAll(durationLabel, duration);
-            fourth.getChildren().addAll(dayLabel, day);
-            fifth.getChildren().addAll(lecturerLabel, lecturer);
-            infoRoot.getChildren().addAll(fifth, fourth, third, second, first);
-            infoStage.setScene(infoScene);
-            infoStage.show();
-        }
     }
 
     private void selectionResult(String selected) {
