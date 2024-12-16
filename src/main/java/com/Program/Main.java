@@ -34,6 +34,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.Pos;
 
 public class Main extends Application {
 
@@ -338,23 +343,23 @@ public class Main extends Application {
         } if (selected instanceof Student) {
             Student student = (Student) selected;
             infoRoot.getChildren().clear();
-        
+            
             TableView<String[]> table = new TableView<>();
-        
+            
             String[] mondayArr = new String[12];
             String[] tuesdayArr = new String[12];
             String[] wednesdayArr = new String[12];
             String[] thursdayArr = new String[12];
             String[] fridayArr = new String[12];
-        
+            
             String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
-        
+            
             ObservableList<Course> mondayData = FXCollections.observableArrayList();
             ObservableList<Course> tuesdayData = FXCollections.observableArrayList();
             ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
             ObservableList<Course> thursdayData = FXCollections.observableArrayList();
             ObservableList<Course> fridayData = FXCollections.observableArrayList();
-        
+            
             for (Course course : student.getEnrolledCourses()) {
                 if (course.getDay().equals("Monday")) {
                     mondayData.add(course);
@@ -372,27 +377,115 @@ public class Main extends Application {
                     fridayData.add(course);
                 }
             }
-        
-            // Monday, Tuesday, Wednesday, Thursday, Friday verilerini dolduruyoruz.
+            
             fillDayData(mondayData, mondayArr, startTimes);
             fillDayData(tuesdayData, tuesdayArr, startTimes);
             fillDayData(wednesdayData, wednesdayArr, startTimes);
             fillDayData(thursdayData, thursdayArr, startTimes);
             fillDayData(fridayData, fridayArr, startTimes);
-        
-            // Sütunlar ve başlıklar
+            
             TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
             timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
+            timeColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
             table.getColumns().add(timeColumn);
-        
-            // Günler için sütunlar
-            addDayColumn(table, "Monday", mondayArr);
-            addDayColumn(table, "Tuesday", tuesdayArr);
-            addDayColumn(table, "Wednesday", wednesdayArr);
-            addDayColumn(table, "Thursday", thursdayArr);
-            addDayColumn(table, "Friday", fridayArr);
-        
-            // Zaman dilimleri ve kurs adlarını tabloya ekleme
+            
+            TableColumn<String[], String> mondayColumn = new TableColumn<>("Monday");
+            mondayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1]));
+            mondayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(mondayColumn);
+            
+            TableColumn<String[], String> tuesdayColumn = new TableColumn<>("Tuesday");
+            tuesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2]));
+            tuesdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(tuesdayColumn);
+            
+            TableColumn<String[], String> wednesdayColumn = new TableColumn<>("Wednesday");
+            wednesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3]));
+            wednesdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(wednesdayColumn);
+            
+            TableColumn<String[], String> thursdayColumn = new TableColumn<>("Thursday");
+            thursdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4]));
+            thursdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(thursdayColumn);
+            
+            TableColumn<String[], String> fridayColumn = new TableColumn<>("Friday");
+            fridayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5]));
+            fridayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(fridayColumn);
+            
             for (int i = 0; i < 12; i++) {
                 String[] row = new String[6];
                 row[0] = startTimes[i];
@@ -403,110 +496,105 @@ public class Main extends Application {
                 row[5] = fridayArr[i];
                 table.getItems().add(row);
             }
-        
-            adjustSize(table, new TableColumn[]{timeColumn}, 0.16);
+            
+            adjustSize(table, new TableColumn[]{timeColumn, mondayColumn, tuesdayColumn, wednesdayColumn, thursdayColumn, fridayColumn}, 0.16);
             infoRoot.getChildren().addAll(table);
             infoStage.setScene(infoScene);
             infoStage.show();
         }
-    }
+    }   
         
-        private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
-            for (Course course : dayData) {
-                int index = 0;
-                for (int i = 0; i < 12; i++) {
-                    if (course.getStartTime().equals(startTimes[i])) {
-                        index = i;
-                    }
+    private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
+        for (Course course : dayData) {
+            int index = -1;
+            for (int i = 0; i < startTimes.length; i++) {
+                if (course.getStartTime().equals(startTimes[i])) {
+                    index = i;
+                    break;
                 }
-                for (int j = index; j < course.getDuration(); j++) {
-                    dayArr[j] = course.getName();
+            }
+            if (index != -1) {
+                for (int j = index; j < index + course.getDuration(); j++) {
+                    if (j < 12) {
+                        dayArr[j] = course.getName();
+                    }
                 }
             }
         }
-
-    private void addDayColumn(TableView<String[]> table, String day, String[] dayArr) {
-        TableColumn<String[], String> dayColumn = new TableColumn<>(day);
-        dayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday").indexOf(day) + 1]));
-        table.getColumns().add(dayColumn);
-    }   
-
+    }
+        
+        
     private void showManual() {
         manualStage.setTitle("Manual");
+        VBox sidebar = new VBox(10);
+        sidebar.setPadding(new Insets(10));
+        sidebar.setPrefWidth(120);
 
-            // Sidebar - Bölümleri oluştur
-            VBox sidebar = new VBox(10);
-            sidebar.setPadding(new Insets(10));
-            sidebar.setPrefWidth(120);
+        Button gettingStartedButton = new Button("Getting Started");
+        Button navigationButton = new Button("Navigation");
+        Button searchingButton = new Button("Searching");
+        Button filteringButton = new Button("Filtering");
 
-            Button gettingStartedButton = new Button("Getting Started");
-            Button navigationButton = new Button("Navigation");
-            Button searchingButton = new Button("Searching");
-            Button filteringButton = new Button("Filtering");
+        sidebar.getChildren().addAll(gettingStartedButton, navigationButton, searchingButton, filteringButton);
 
-            sidebar.getChildren().addAll(gettingStartedButton, navigationButton, searchingButton, filteringButton);
+        VBox detailContent = new VBox(10);
+        detailContent.setPadding(new Insets(10));
+        Label detailTitle = new Label("Welcome to the User Manual!");
+        detailTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-            VBox detailContent = new VBox(10);
-            detailContent.setPadding(new Insets(10));
-            Label detailTitle = new Label("Welcome to the User Manual!");
-            detailTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label detailText = new Label("Select a section from the sidebar to learn more about how to use Sketchuler.");
+        detailText.setWrapText(true);
+        detailContent.getChildren().addAll(detailTitle, detailText);
 
-            Label detailText = new Label(
-                    "Select a section from the sidebar to learn more about how to use Sketchuler."
+        HBox manualLayout = new HBox(10);
+        manualLayout.getChildren().addAll(sidebar, detailContent);
+
+        gettingStartedButton.setOnAction(event -> {
+            detailTitle.setText("Getting Started");
+            detailText.setText(
+                    "To start using Sketchuler:\n" +
+                            "1. Select a category (Courses, Students, Teachers, Classes) from the dropdown menu.\n" +
+                            "2. Click 'Proceed' to view the selected category's data in the table.\n" +
+                            "3. Use the 'Search' or 'Filter by Day' options to refine your view."
             );
-            detailText.setWrapText(true);
+        });
 
-            detailContent.getChildren().addAll(detailTitle, detailText);
+        navigationButton.setOnAction(event -> {
+            detailTitle.setText("Navigation");
+            detailText.setText(
+                    "Navigate through the application:\n" +
+                            "1. Use the menu bar for options like Import, Save, or Quit.\n" +
+                            "2. Use the dropdown menu and buttons in the main interface to explore data."
+            );
+        });
 
-            HBox manualLayout = new HBox(10);
-            manualLayout.getChildren().addAll(sidebar, detailContent);
+        searchingButton.setOnAction(event -> {
+            detailTitle.setText("Searching");
+            detailText.setText(
+                    "Search functionality allows you to find specific items:\n" +
+                            "1. Click the 'Search' button.\n" +
+                            "2. Enter a keyword to search in the current category.\n" +
+                            "3. Results matching your search will be displayed in the table."
+            );
+        });
 
-            gettingStartedButton.setOnAction(event -> {
-                detailTitle.setText("Getting Started");
-                detailText.setText(
-                        "To start using Sketchuler:\n" +
-                                "1. Select a category (Courses, Students, Teachers, Classes) from the dropdown menu.\n" +
-                                "2. Click 'Proceed' to view the selected category's data in the table.\n" +
-                                "3. Use the 'Search' or 'Filter by Day' options to refine your view."
-                );
-            });
+        filteringButton.setOnAction(event -> {
+            detailTitle.setText("Filtering");
+            detailText.setText(
+                    "Filter courses by day:\n" +
+                            "1. Use the 'Filter by Day' dropdown menu.\n" +
+                            "2. Select a day (e.g., Monday, Tuesday).\n" +
+                            "3. Only courses Studentd on the selected day will be displayed."
+            );
+        });
 
-            navigationButton.setOnAction(event -> {
-                detailTitle.setText("Navigation");
-                detailText.setText(
-                        "Navigate through the application:\n" +
-                                "1. Use the menu bar for options like Import, Save, or Quit.\n" +
-                                "2. Use the dropdown menu and buttons in the main interface to explore data."
-                );
-            });
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(event -> manualStage.close());
+        detailContent.getChildren().add(closeButton);
 
-            searchingButton.setOnAction(event -> {
-                detailTitle.setText("Searching");
-                detailText.setText(
-                        "Search functionality allows you to find specific items:\n" +
-                                "1. Click the 'Search' button.\n" +
-                                "2. Enter a keyword to search in the current category.\n" +
-                                "3. Results matching your search will be displayed in the table."
-                );
-            });
-
-            filteringButton.setOnAction(event -> {
-                detailTitle.setText("Filtering");
-                detailText.setText(
-                        "Filter courses by day:\n" +
-                                "1. Use the 'Filter by Day' dropdown menu.\n" +
-                                "2. Select a day (e.g., Monday, Tuesday).\n" +
-                                "3. Only courses Studentd on the selected day will be displayed."
-                );
-            });
-
-            Button closeButton = new Button("Close");
-            closeButton.setOnAction(event -> manualStage.close());
-            detailContent.getChildren().add(closeButton);
-
-            Scene manualScene = new Scene(manualLayout, 600, 400);
-            manualStage.setScene(manualScene);
-            manualStage.show();
+        Scene manualScene = new Scene(manualLayout, 600, 400);
+        manualStage.setScene(manualScene);
+        manualStage.show();
     }
 
     private void selectionResult(String selected) {
