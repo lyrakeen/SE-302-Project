@@ -711,8 +711,170 @@ public class Main extends Application {
             infoRoot.getChildren().addAll(table);
             infoStage.setScene(infoScene);
             infoStage.show();
+        } if(selected instanceof Teacher) {
+            Teacher teacher = (Teacher) selected;
+            infoRoot.getChildren().clear();
+            
+            TableView<String[]> table = new TableView<>();
+            
+            String[] mondayArr = new String[12];
+            String[] tuesdayArr = new String[12];
+            String[] wednesdayArr = new String[12];
+            String[] thursdayArr = new String[12];
+            String[] fridayArr = new String[12];
+            
+            String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
+            
+            ObservableList<Course> mondayData = FXCollections.observableArrayList();
+            ObservableList<Course> tuesdayData = FXCollections.observableArrayList();
+            ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
+            ObservableList<Course> thursdayData = FXCollections.observableArrayList();
+            ObservableList<Course> fridayData = FXCollections.observableArrayList();
+            
+            for (Course course : teacher.getAssignedCourses()) {
+                if (course.getDay().equals("Monday")) {
+                    mondayData.add(course);
+                }
+                if (course.getDay().equals("Tuesday")) {
+                    tuesdayData.add(course);
+                }
+                if (course.getDay().equals("Wednesday")) {
+                    wednesdayData.add(course);
+                }
+                if (course.getDay().equals("Thursday")) {
+                    thursdayData.add(course);
+                }
+                if (course.getDay().equals("Friday")) {
+                    fridayData.add(course);
+                }
+            }
+            
+            fillDayData(mondayData, mondayArr, startTimes);
+            fillDayData(tuesdayData, tuesdayArr, startTimes);
+            fillDayData(wednesdayData, wednesdayArr, startTimes);
+            fillDayData(thursdayData, thursdayArr, startTimes);
+            fillDayData(fridayData, fridayArr, startTimes);
+            
+            TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
+            timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
+            timeColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(timeColumn);
+            
+            TableColumn<String[], String> mondayColumn = new TableColumn<>("Monday");
+            mondayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1]));
+            mondayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(mondayColumn);
+            
+            TableColumn<String[], String> tuesdayColumn = new TableColumn<>("Tuesday");
+            tuesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2]));
+            tuesdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(tuesdayColumn);
+            
+            TableColumn<String[], String> wednesdayColumn = new TableColumn<>("Wednesday");
+            wednesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3]));
+            wednesdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(wednesdayColumn);
+            
+            TableColumn<String[], String> thursdayColumn = new TableColumn<>("Thursday");
+            thursdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4]));
+            thursdayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(thursdayColumn);
+            
+            TableColumn<String[], String> fridayColumn = new TableColumn<>("Friday");
+            fridayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5]));
+            fridayColumn.setCellFactory(column -> {
+                TableCell<String[], String> cell = new TableCell<String[], String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            setText(item);
+                            setAlignment(Pos.CENTER);
+                        }
+                    }
+                };
+                return cell;
+            });
+            table.getColumns().add(fridayColumn);
+            
+            for (int i = 0; i < 12; i++) {
+                String[] row = new String[6];
+                row[0] = startTimes[i];
+                row[1] = mondayArr[i];
+                row[2] = tuesdayArr[i];
+                row[3] = wednesdayArr[i];
+                row[4] = thursdayArr[i];
+                row[5] = fridayArr[i];
+                table.getItems().add(row);
+            }
+            
+            adjustSize(table, new TableColumn[]{timeColumn, mondayColumn, tuesdayColumn, wednesdayColumn, thursdayColumn, fridayColumn}, 0.16);
+            infoRoot.getChildren().addAll(table);
+            infoStage.setScene(infoScene);
+            infoStage.show();
+            
         }
-    }   
+    }      
         
     private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
         for (Course course : dayData) {
