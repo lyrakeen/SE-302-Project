@@ -46,4 +46,9 @@ public class Student {
     public void dropCourse(Course course) {
         enrolledCourses.remove(course);
     }
+
+    @Override
+    public String toString() {
+        return this.fullName;
+    }
 }

@@ -84,8 +84,13 @@ public class Main extends Application {
         helpMenu.getItems().addAll(aboutItem, manualItem);
 
         courseItem.setOnAction(e -> {managingCourses();});
+        teacherItem.setOnAction(e -> managingTeachers());
+        studentItem.setOnAction(e -> managingStudents());
 
         Button mainProceed = new Button("Proceed");
+        Button addCourseButton = new Button("Add Course");
+
+        Button addTeacherButton = new Button("Add Teacher");
         Button clearButton = new Button("Clear");
         ComboBox<String> dayFilterBox = new ComboBox<>();
         dayFilterBox.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
@@ -268,31 +273,236 @@ public class Main extends Application {
             }
         });
 
+        Button addCourseButton = new Button("Add");
         Button editC = new Button("Edit");
         Button deleteC = new Button("Delete");
-        forButtons.getChildren().addAll(editC, deleteC);
 
-        /* metotları halledince çalıştırırsın
-        editC.setOnAction(e -> {burayametotismigelecek(courseLists.getSelectionModel());}); 
+        forButtons.getChildren().addAll(addCourseButton, editC, deleteC);
 
-        */
-        deleteC.setOnAction(e -> {
-            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
-            if(selectedCourse !=null){
-                try {
-                    databaseLoader.deleteCourse(selectedCourse.getName());
-                    courseLists.getItems().remove(selectedCourse);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+        // Add Course Button
+        addCourseButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Add Course");
+            dialog.setHeaderText("Enter new course name");
+            dialog.setContentText("Course Name:");
+
+            dialog.showAndWait().ifPresent(courseName -> {
+                if (!courseName.trim().isEmpty()) {
+                    Course newCourse = new Course(courseName, "08:30", 1, "Unknown", ""); // Default Course Data
+                    courses.add(newCourse);
+                    courseLists.getItems().add(newCourse);
+                    showAlert("Course added successfully!");
+                } else {
+                    showAlert("Course name cannot be empty!");
                 }
+            });
+        });
+
+        // Edit Course Button
+        editC.setOnAction(e -> {
+            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
+            if (selectedCourse != null) {
+                TextInputDialog dialog = new TextInputDialog(selectedCourse.getName());
+                dialog.setTitle("Edit Course");
+                dialog.setHeaderText("Edit course name");
+                dialog.setContentText("New Name:");
+
+                dialog.showAndWait().ifPresent(newName -> {
+                    if (!newName.trim().isEmpty()) {
+                        selectedCourse.setName(newName);
+                        courseLists.refresh(); // Listeyi yenile
+                        showAlert("Course edited successfully!");
+                    } else {
+                        showAlert("Course name cannot be empty!");
+                    }
+                });
+            } else {
+                showAlert("Please select a course to edit.");
             }
         });
+
+        // Delete Course Button
+        deleteC.setOnAction(e -> {
+            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
+            if (selectedCourse != null) {
+                courses.remove(selectedCourse);
+                courseLists.getItems().remove(selectedCourse);
+                showAlert("Course deleted successfully!");
+            } else {
+                showAlert("Please select a course to delete.");
+            }
+        });
+
         forButtons.setAlignment(Pos.CENTER);
 
-        mcBox.getChildren().addAll(courseLists, forButtons); 
+        mcBox.getChildren().addAll(courseLists, forButtons);
         mcs.setScene(mcSc);
         mcs.show();
     }
+
+    private void managingStudents() {
+        HBox forButtons = new HBox(5);
+        VBox msBox = new VBox(5);
+        Stage mss = new Stage();
+        Scene msSc = new Scene(msBox);
+
+        ListView<Student> studentLists = new ListView<>();
+        studentLists.getItems().addAll(students);
+
+        Button addStudentButton = new Button("Add Student");
+        addStudentButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Add Student");
+            dialog.setHeaderText("Enter new student name");
+            dialog.setContentText("Name:");
+
+            dialog.showAndWait().ifPresent(name -> {
+                if (!name.trim().isEmpty()) {
+                    Student newStudent = new Student(name);
+                    students.add(newStudent);
+                    studentLists.getItems().add(newStudent);
+                    showAlert("Student added successfully!");
+                } else {
+                    showAlert("Student name cannot be empty!");
+                }
+            });
+        });
+
+        Button editS = new Button("Edit");
+        Button deleteS = new Button("Delete");
+
+        forButtons.getChildren().addAll(addStudentButton, editS, deleteS);
+
+        addStudentButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Add Student");
+            dialog.setHeaderText("Enter new student name");
+            dialog.setContentText("Name:");
+
+            dialog.showAndWait().ifPresent(name -> {
+                if (!name.trim().isEmpty()) {
+                    Student newStudent = new Student(name);
+                    students.add(newStudent);
+                    studentLists.getItems().add(newStudent);
+                    showAlert("Student added successfully!");
+                }
+            });
+        });
+
+        editS.setOnAction(e -> {
+            Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
+            if (selectedStudent != null) {
+                TextInputDialog dialog = new TextInputDialog(selectedStudent.getFullName());
+                dialog.setTitle("Edit Student");
+                dialog.setHeaderText("Edit student name");
+                dialog.setContentText("New Name:");
+
+                dialog.showAndWait().ifPresent(newName -> {
+                    if (!newName.trim().isEmpty()) {
+                        selectedStudent.setFullName(newName);
+                        studentLists.refresh();
+                        showAlert("Student edited successfully!");
+                    }
+                });
+            }
+        });
+
+        deleteS.setOnAction(e -> {
+            Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
+            if (selectedStudent != null) {
+                students.remove(selectedStudent);
+                studentLists.getItems().remove(selectedStudent);
+                showAlert("Student deleted successfully!");
+            }
+        });
+
+        msBox.getChildren().addAll(studentLists, forButtons);
+        mss.setScene(msSc);
+        mss.show();
+    }
+
+    private void managingTeachers() {
+        HBox forButtons = new HBox(5);
+        VBox mtBox = new VBox(5);
+        Stage mts = new Stage();
+        Scene mtSc = new Scene(mtBox);
+
+        ListView<Teacher> teacherLists = new ListView<>();
+        teacherLists.getItems().addAll(teachers);
+
+        Button addTeacherButton = new Button("Add Teacher");
+        addTeacherButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Add Teacher");
+            dialog.setHeaderText("Enter new teacher name");
+            dialog.setContentText("Name:");
+
+            dialog.showAndWait().ifPresent(name -> {
+                if (!name.trim().isEmpty()) {
+                    Teacher newTeacher = new Teacher(name);
+                    teachers.add(newTeacher);
+                    teacherLists.getItems().add(newTeacher);
+                    showAlert("Teacher added successfully!");
+                } else {
+                    showAlert("Teacher name cannot be empty!");
+                }
+            });
+        });
+
+        Button editT = new Button("Edit");
+        Button deleteT = new Button("Delete");
+
+        forButtons.getChildren().addAll(addTeacherButton, editT, deleteT);
+
+        addTeacherButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Add Teacher");
+            dialog.setHeaderText("Enter new teacher name");
+            dialog.setContentText("Name:");
+
+            dialog.showAndWait().ifPresent(name -> {
+                if (!name.trim().isEmpty()) {
+                    Teacher newTeacher = new Teacher(name);
+                    teachers.add(newTeacher);
+                    teacherLists.getItems().add(newTeacher);
+                    showAlert("Teacher added successfully!");
+                }
+            });
+        });
+
+        editT.setOnAction(e -> {
+            Teacher selectedTeacher = teacherLists.getSelectionModel().getSelectedItem();
+            if (selectedTeacher != null) {
+                TextInputDialog dialog = new TextInputDialog(selectedTeacher.getFullName());
+                dialog.setTitle("Edit Teacher");
+                dialog.setHeaderText("Edit teacher name");
+                dialog.setContentText("New Name:");
+
+                dialog.showAndWait().ifPresent(newName -> {
+                    if (!newName.trim().isEmpty()) {
+                        selectedTeacher.setFullName(newName);
+                        teacherLists.refresh();
+                        showAlert("Teacher edited successfully!");
+                    }
+                });
+            }
+        });
+
+        deleteT.setOnAction(e -> {
+            Teacher selectedTeacher = teacherLists.getSelectionModel().getSelectedItem();
+            if (selectedTeacher != null) {
+                teachers.remove(selectedTeacher);
+                teacherLists.getItems().remove(selectedTeacher);
+                showAlert("Teacher deleted successfully!");
+            }
+        });
+
+        mtBox.getChildren().addAll(teacherLists, forButtons);
+        mts.setScene(mtSc);
+        mts.show();
+    }
+
+
 
     private void displayInfo(Object selected) {
         if (selected instanceof Course) {

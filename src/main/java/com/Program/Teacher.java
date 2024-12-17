@@ -44,4 +44,9 @@ public class Teacher {
     public void removeCourse(Course course) {
         assignedCourses.remove(course);
     }
+    @Override
+    public String toString() {
+        return this.fullName;
+    }
+
 }
