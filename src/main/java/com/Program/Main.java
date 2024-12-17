@@ -24,6 +24,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
@@ -110,8 +111,9 @@ public class Main extends Application {
         toCenter.getChildren().add(sketchuler);
         toBeNext.getChildren().addAll(selection, mainProceed, searchButton, dayFilterBox, clearButton);
         root.getChildren().addAll(menuBar, spacer1, toCenter, spacer3, toBeNext, spacer2, forTablePadding);
-        Label resultCountLabel = new Label("Results: 0");
-        root.getChildren().add(resultCountLabel);
+
+        //Label resultCountLabel = new Label("Results: 0");
+        //root.getChildren().add(resultCountLabel);
 
         forTablePadding.setPadding(new Insets(10));
         toBeNext.setAlignment(Pos.CENTER);
@@ -133,14 +135,14 @@ public class Main extends Application {
             }
             currentTab = selection.getValue();
             selectionResult(currentTab);
-            resultCountLabel.setText("Results: " + table.getItems().size());
+            //resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
         clearButton.setOnAction(e -> {
             table.getItems().clear();
             table.getColumns().clear();
             currentTab = null;
-            resultCountLabel.setText("Results: 0");
+            //resultCountLabel.setText("Results: 0");
         });
         searchButton.setOnAction(e -> {
             if (currentTab == null) {
@@ -202,7 +204,7 @@ public class Main extends Application {
                         showAlert("Search is not supported for the selected tab.");
                 }
             }
-            resultCountLabel.setText("Results: " + table.getItems().size());
+            //resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
         dayFilterBox.setOnAction(e -> {
@@ -225,7 +227,7 @@ public class Main extends Application {
             }
 
             table.getItems().setAll(filteredByDay);
-            resultCountLabel.setText("Results: " + table.getItems().size());
+            //resultCountLabel.setText("Results: " + table.getItems().size());
         });
 
         aboutItem.setOnAction(e -> {
@@ -535,7 +537,7 @@ public class Main extends Application {
 
 
     private void displayInfo(Object selected) {
-        if (selected instanceof Course) {
+        if (selected instanceof Course) { // search should be added
             infoRoot.getChildren().clear();
             try {
                 courseStudents.clear();
@@ -583,26 +585,26 @@ public class Main extends Application {
         } if (selected instanceof Student) {
             infoRoot.getChildren().clear();
             Student student = (Student) selected;
-            createScheduleTable(FXCollections.observableArrayList(student.getEnrolledCourses()), infoRoot, infoStage, infoScene,false);
+            createScheduleTable(FXCollections.observableArrayList(student.getEnrolledCourses()), infoRoot, infoStage, infoScene);
             Label forStudent = new Label(student.getFullName() + "'s Weekly Program");
             infoRoot.getChildren().add(0,forStudent); // BURAYA TASARIM YAPILACAK 
         } if (selected instanceof Teacher) {
             infoRoot.getChildren().clear();
             Teacher teacher = (Teacher) selected;
-            createScheduleTable(FXCollections.observableArrayList(teacher.getAssignedCourses()), infoRoot, infoStage, infoScene,false);
+            createScheduleTable(FXCollections.observableArrayList(teacher.getAssignedCourses()), infoRoot, infoStage, infoScene);
             Label forTeacher = new Label(teacher.getFullName() + "'s Weekly Program");
             infoRoot.getChildren().add(0,forTeacher); // BURAYA TASARIM YAPILACAK 
         } if (selected instanceof Classroom) {
             infoRoot.getChildren().clear();
             Classroom classroom = (Classroom) selected;
-            createScheduleTable(FXCollections.observableArrayList(classroom.getAssignedCourses()), infoRoot, infoStage, infoScene,false);
+            createScheduleTable(FXCollections.observableArrayList(classroom.getAssignedCourses()), infoRoot, infoStage, infoScene);
             Label forClass = new Label(classroom.getName() + "'s Weekly Program  Capacity : " + classroom.getCapacity());
             infoRoot.getChildren().add(0,forClass); // BURAYA TASARIM YAPILACAK 
         }
     }
 
-    private void createScheduleTable(ObservableList<Course> courses, VBox infoRoot, Stage infoStage, Scene infoScene, Boolean isClass) {
-        TableView<String[]> table = new TableView<>();
+    private void createScheduleTable(ObservableList<Course> courses, VBox infoRoot, Stage infoStage, Scene infoScene) {
+        TableView<String[]> infoTable = new TableView<>();
 
         String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
         String[][] dayData = new String[5][12];
@@ -632,11 +634,11 @@ public class Main extends Application {
         }
 
         TableColumn<String[], String> timeColumn = createTableColumn("Time", 0);
-        table.getColumns().add(timeColumn);
+        infoTable.getColumns().add(timeColumn);
 
         for (int i = 0; i < days.length; i++) {
             TableColumn<String[], String> dayColumn = createTableColumn(days[i], i + 1);
-            table.getColumns().add(dayColumn);
+            infoTable.getColumns().add(dayColumn);
         }
 
         for (int i = 0; i < 12; i++) {
@@ -645,19 +647,18 @@ public class Main extends Application {
             for (int j = 0; j < 5; j++) {
                 row[j + 1] = dayData[j][i];
             }
-            table.getItems().add(row);
-        } if (isClass == true) {
-            adjustSize(table, table.getColumns().toArray(new TableColumn[0]), 0.16);
-            infoRoot.getChildren().addAll(table);
-            infoStage.setScene(infoScene);
-            infoStage.show();
+            infoTable.getItems().add(row);
         }
-        else {
-            adjustSize(table, table.getColumns().toArray(new TableColumn[0]), 0.16);
-            infoRoot.getChildren().addAll(table);
-            infoStage.setScene(infoScene);
-            infoStage.show();
-        }
+        infoTable.getSelectionModel().setCellSelectionEnabled(false); 
+        infoTable.setFocusTraversable(false);
+        infoTable.setOnMouseClicked(event -> {
+            infoTable.getSelectionModel().clearSelection(); 
+        });
+        adjustSize(infoTable, infoTable.getColumns().toArray(new TableColumn[0]), 0.16);
+        infoRoot.getChildren().addAll(infoTable);
+        infoStage.setScene(infoScene);
+        infoStage.show();
+        
     }
 
     private TableColumn<String[], String> createTableColumn(String header, int index) {
