@@ -36,22 +36,30 @@ public class Classroom {
 
     public boolean isConflicting(Course course) {
         for (Course scheduledCourse : schedule) {
-            if (scheduledCourse.getDay().equals(course.getDay())) { 
+            if (scheduledCourse.getDay().equals(course.getDay())) {
 
-                String[] schParts = scheduledCourse.getEndTime().split(":"); //scheduled course parts
-                int[] intSch = {Integer.parseInt(schParts[0]), Integer.parseInt(schParts[1])}; // scheduled course time parts converted to int
-   
-                String[] cParts = course.getStartTime().split(":"); // course parts
-                int[] intCo = {Integer.parseInt(cParts[0]), Integer.parseInt(cParts[1])}; //  course time parts converted to int
+                int[] scheduledStart = parseTime(scheduledCourse.getStartTime());
+                int[] scheduledEnd = parseTime(scheduledCourse.getEndTime());
 
-                if (!(intCo[0] > intSch[0])) {
-                    if (!(intCo[0] > intSch[0])){
-                        return true;
-                    }
+                int[] courseStart = parseTime(course.getStartTime());
+                int[] courseEnd = parseTime(course.getEndTime());
+
+                if (isTimeConflict(scheduledStart, scheduledEnd, courseStart, courseEnd)) {
+                    return true; 
                 }
             }
         }
         return false;
+    }
+    
+    private int[] parseTime(String time) {
+        String[] parts = time.split(":");
+        return new int[] { Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) };
+    }
+    
+    private boolean isTimeConflict(int[] start1, int[] end1, int[] start2, int[] end2) {
+        return !(end1[0] < start2[0] || (end1[0] == start2[0] && end1[1] <= start2[1])) &&
+               !(end2[0] < start1[0] || (end2[0] == start1[0] && end2[1] <= start1[1]));
     }
 
     public void addCourse(Course course) {

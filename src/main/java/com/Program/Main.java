@@ -555,6 +555,8 @@ public class Main extends Application {
             Label day = new Label(course.getDay());
             Label lecturerLabel = new Label("Lecturer :");
             Label lecturer = new Label(course.getLecturer());
+            Label studentCountLabel = new Label("Student Count : ");
+            Label studentCount = new Label(Integer.toString(course.getStudents().size()+1));
             ListView studentList = new ListView<>();
             List<Student> students = course.getStudents();
             List<String> studentNames = students.stream().map(Student::getFullName).collect(Collectors.toList());
@@ -567,6 +569,7 @@ public class Main extends Application {
             HBox third = new HBox(5);
             HBox fourth = new HBox(5);
             HBox fifth = new HBox(5);
+            HBox sixth = new HBox(5);
 
             infoRoot.setAlignment(Pos.CENTER);
             allIn.setAlignment(Pos.CENTER);
@@ -577,7 +580,8 @@ public class Main extends Application {
             third.getChildren().addAll(durationLabel, duration);
             fourth.getChildren().addAll(dayLabel, day);
             fifth.getChildren().addAll(lecturerLabel, lecturer);
-            allIn.getChildren().addAll(fifth, fourth, third, second, first);
+            sixth.getChildren().addAll(studentCountLabel,studentCount);
+            allIn.getChildren().addAll(sixth, fifth, fourth, third, second, first);
             nextBox.getChildren().addAll(allIn, studentList);
             infoRoot.getChildren().addAll(nextBox);
             infoStage.setScene(infoScene);

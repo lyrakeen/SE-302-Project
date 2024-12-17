@@ -17,35 +17,23 @@ public class CourseManager {
 
     public void allocateClassrooms(DatabaseLoader databaseLoader) {
         for (Course course : courses) {
-            Classroom cmax=null;
+            Classroom assignedClassroom = null;
+            int minCapacityDifference = Integer.MAX_VALUE;  
+
             for (Classroom classroom : classrooms) {
-                cmax = classroom;
                 if (classroom.getCapacity() >= course.getStudents().size() && !classroom.isConflicting(course)) {
-                    if (cmax.getCapacity() > classroom.getCapacity()) {
-                        cmax = classroom;
+                    int capacityDifference = classroom.getCapacity() - course.getStudents().size();
+                    if (capacityDifference < minCapacityDifference) {
+                        minCapacityDifference = capacityDifference;
+                        assignedClassroom = classroom;
                     }
-                    cmax.addCourse(course);
-                    course.setClassroom(cmax);
-                    break;
                 }
             }
-            databaseLoader.updateCourseClassroom(course.getName(), cmax.getName());
-        }
-
-    }
-
-    public void addCourse(Course course) {
-        courses.add(course);
-    }
-
-    public void removeCourse(Course course) {
-        courses.remove(course);
-    }
-
-    public void editCourse(Course oldCourse, Course newCourse) {
-        int index = courses.indexOf(oldCourse);
-        if (index >= 0) {
-            courses.set(index, newCourse);
+            if (assignedClassroom != null) {
+                assignedClassroom.addCourse(course);
+                course.setClassroom(assignedClassroom);
+                databaseLoader.updateCourseClassroom(course.getName(), assignedClassroom.getName());
+            } 
         }
     }
 
