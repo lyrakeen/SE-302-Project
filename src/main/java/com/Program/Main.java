@@ -29,6 +29,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
@@ -580,330 +581,106 @@ public class Main extends Application {
             infoStage.setScene(infoScene);
             infoStage.show();
         } if (selected instanceof Student) {
+            infoRoot.getChildren().clear();
             Student student = (Student) selected;
+            createScheduleTable(FXCollections.observableArrayList(student.getEnrolledCourses()), infoRoot, infoStage, infoScene,false);
+            Label forStudent = new Label(student.getFullName() + "'s Weekly Program");
+            infoRoot.getChildren().add(0,forStudent); // BURAYA TASARIM YAPILACAK 
+        } if (selected instanceof Teacher) {
             infoRoot.getChildren().clear();
-            
-            TableView<String[]> table = new TableView<>();
-            
-            String[] mondayArr = new String[12];
-            String[] tuesdayArr = new String[12];
-            String[] wednesdayArr = new String[12];
-            String[] thursdayArr = new String[12];
-            String[] fridayArr = new String[12];
-            
-            String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
-            
-            ObservableList<Course> mondayData = FXCollections.observableArrayList();
-            ObservableList<Course> tuesdayData = FXCollections.observableArrayList();
-            ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
-            ObservableList<Course> thursdayData = FXCollections.observableArrayList();
-            ObservableList<Course> fridayData = FXCollections.observableArrayList();
-            
-            for (Course course : student.getEnrolledCourses()) {
-                if (course.getDay().equals("Monday")) {
-                    mondayData.add(course);
-                }
-                if (course.getDay().equals("Tuesday")) {
-                    tuesdayData.add(course);
-                }
-                if (course.getDay().equals("Wednesday")) {
-                    wednesdayData.add(course);
-                }
-                if (course.getDay().equals("Thursday")) {
-                    thursdayData.add(course);
-                }
-                if (course.getDay().equals("Friday")) {
-                    fridayData.add(course);
-                }
-            }
-            
-            fillDayData(mondayData, mondayArr, startTimes);
-            fillDayData(tuesdayData, tuesdayArr, startTimes);
-            fillDayData(wednesdayData, wednesdayArr, startTimes);
-            fillDayData(thursdayData, thursdayArr, startTimes);
-            fillDayData(fridayData, fridayArr, startTimes);
-            
-            TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
-            timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
-            timeColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(timeColumn);
-            
-            TableColumn<String[], String> mondayColumn = new TableColumn<>("Monday");
-            mondayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1]));
-            mondayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(mondayColumn);
-            
-            TableColumn<String[], String> tuesdayColumn = new TableColumn<>("Tuesday");
-            tuesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2]));
-            tuesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(tuesdayColumn);
-            
-            TableColumn<String[], String> wednesdayColumn = new TableColumn<>("Wednesday");
-            wednesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3]));
-            wednesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(wednesdayColumn);
-            
-            TableColumn<String[], String> thursdayColumn = new TableColumn<>("Thursday");
-            thursdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4]));
-            thursdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(thursdayColumn);
-            
-            TableColumn<String[], String> fridayColumn = new TableColumn<>("Friday");
-            fridayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5]));
-            fridayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(fridayColumn);
-            
-            for (int i = 0; i < 12; i++) {
-                String[] row = new String[6];
-                row[0] = startTimes[i];
-                row[1] = mondayArr[i];
-                row[2] = tuesdayArr[i];
-                row[3] = wednesdayArr[i];
-                row[4] = thursdayArr[i];
-                row[5] = fridayArr[i];
-                table.getItems().add(row);
-            }
-            
-            adjustSize(table, new TableColumn[]{timeColumn, mondayColumn, tuesdayColumn, wednesdayColumn, thursdayColumn, fridayColumn}, 0.16);
-            infoRoot.getChildren().addAll(table);
-            infoStage.setScene(infoScene);
-            infoStage.show();
-        } if(selected instanceof Teacher) {
             Teacher teacher = (Teacher) selected;
+            createScheduleTable(FXCollections.observableArrayList(teacher.getAssignedCourses()), infoRoot, infoStage, infoScene,false);
+            Label forTeacher = new Label(teacher.getFullName() + "'s Weekly Program");
+            infoRoot.getChildren().add(0,forTeacher); // BURAYA TASARIM YAPILACAK 
+        } if (selected instanceof Classroom) {
             infoRoot.getChildren().clear();
-            
-            TableView<String[]> table = new TableView<>();
-            
-            String[] mondayArr = new String[12];
-            String[] tuesdayArr = new String[12];
-            String[] wednesdayArr = new String[12];
-            String[] thursdayArr = new String[12];
-            String[] fridayArr = new String[12];
-            
-            String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
-            
-            ObservableList<Course> mondayData = FXCollections.observableArrayList();
-            ObservableList<Course> tuesdayData = FXCollections.observableArrayList();
-            ObservableList<Course> wednesdayData = FXCollections.observableArrayList();
-            ObservableList<Course> thursdayData = FXCollections.observableArrayList();
-            ObservableList<Course> fridayData = FXCollections.observableArrayList();
-            
-            for (Course course : teacher.getAssignedCourses()) {
-                if (course.getDay().equals("Monday")) {
-                    mondayData.add(course);
-                }
-                if (course.getDay().equals("Tuesday")) {
-                    tuesdayData.add(course);
-                }
-                if (course.getDay().equals("Wednesday")) {
-                    wednesdayData.add(course);
-                }
-                if (course.getDay().equals("Thursday")) {
-                    thursdayData.add(course);
-                }
-                if (course.getDay().equals("Friday")) {
-                    fridayData.add(course);
+            Classroom classroom = (Classroom) selected;
+            createScheduleTable(FXCollections.observableArrayList(classroom.getAssignedCourses()), infoRoot, infoStage, infoScene,false);
+            Label forClass = new Label(classroom.getName() + "'s Weekly Program  Capacity : " + classroom.getCapacity());
+            infoRoot.getChildren().add(0,forClass); // BURAYA TASARIM YAPILACAK 
+        }
+    }
+
+    private void createScheduleTable(ObservableList<Course> courses, VBox infoRoot, Stage infoStage, Scene infoScene, Boolean isClass) {
+        TableView<String[]> table = new TableView<>();
+
+        String[] startTimes = {"8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35"};
+        String[][] dayData = new String[5][12];
+
+        @SuppressWarnings("unchecked") // to supress warnings
+        ObservableList<Course>[] dayCourses = new ObservableList[]{
+            FXCollections.observableArrayList(), // Monday
+            FXCollections.observableArrayList(), // Tuesday
+            FXCollections.observableArrayList(), // Wednesday
+            FXCollections.observableArrayList(), // Thursday
+            FXCollections.observableArrayList()  // Friday
+        };
+
+        String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+
+        for (Course course : courses) {
+            for (int i = 0; i < days.length; i++) {
+                if (course.getDay().equals(days[i])) {
+                    dayCourses[i].add(course);
+                    break;
                 }
             }
-            
-            fillDayData(mondayData, mondayArr, startTimes);
-            fillDayData(tuesdayData, tuesdayArr, startTimes);
-            fillDayData(wednesdayData, wednesdayArr, startTimes);
-            fillDayData(thursdayData, thursdayArr, startTimes);
-            fillDayData(fridayData, fridayArr, startTimes);
-            
-            TableColumn<String[], String> timeColumn = new TableColumn<>("Time");
-            timeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0]));
-            timeColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(timeColumn);
-            
-            TableColumn<String[], String> mondayColumn = new TableColumn<>("Monday");
-            mondayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1]));
-            mondayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(mondayColumn);
-            
-            TableColumn<String[], String> tuesdayColumn = new TableColumn<>("Tuesday");
-            tuesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2]));
-            tuesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(tuesdayColumn);
-            
-            TableColumn<String[], String> wednesdayColumn = new TableColumn<>("Wednesday");
-            wednesdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3]));
-            wednesdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(wednesdayColumn);
-            
-            TableColumn<String[], String> thursdayColumn = new TableColumn<>("Thursday");
-            thursdayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4]));
-            thursdayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(thursdayColumn);
-            
-            TableColumn<String[], String> fridayColumn = new TableColumn<>("Friday");
-            fridayColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5]));
-            fridayColumn.setCellFactory(column -> {
-                TableCell<String[], String> cell = new TableCell<String[], String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                            setAlignment(Pos.CENTER);
-                        }
-                    }
-                };
-                return cell;
-            });
-            table.getColumns().add(fridayColumn);
-            
-            for (int i = 0; i < 12; i++) {
-                String[] row = new String[6];
-                row[0] = startTimes[i];
-                row[1] = mondayArr[i];
-                row[2] = tuesdayArr[i];
-                row[3] = wednesdayArr[i];
-                row[4] = thursdayArr[i];
-                row[5] = fridayArr[i];
-                table.getItems().add(row);
+        }
+
+        for (int i = 0; i < days.length; i++) {
+            fillDayData(dayCourses[i], dayData[i], startTimes);
+        }
+
+        TableColumn<String[], String> timeColumn = createTableColumn("Time", 0);
+        table.getColumns().add(timeColumn);
+
+        for (int i = 0; i < days.length; i++) {
+            TableColumn<String[], String> dayColumn = createTableColumn(days[i], i + 1);
+            table.getColumns().add(dayColumn);
+        }
+
+        for (int i = 0; i < 12; i++) {
+            String[] row = new String[6];
+            row[0] = startTimes[i];
+            for (int j = 0; j < 5; j++) {
+                row[j + 1] = dayData[j][i];
             }
-            
-            adjustSize(table, new TableColumn[]{timeColumn, mondayColumn, tuesdayColumn, wednesdayColumn, thursdayColumn, fridayColumn}, 0.16);
+            table.getItems().add(row);
+        } if (isClass == true) {
+            adjustSize(table, table.getColumns().toArray(new TableColumn[0]), 0.16);
             infoRoot.getChildren().addAll(table);
             infoStage.setScene(infoScene);
             infoStage.show();
-            
         }
-    }      
+        else {
+            adjustSize(table, table.getColumns().toArray(new TableColumn[0]), 0.16);
+            infoRoot.getChildren().addAll(table);
+            infoStage.setScene(infoScene);
+            infoStage.show();
+        }
+    }
+
+    private TableColumn<String[], String> createTableColumn(String header, int index) {
+        TableColumn<String[], String> column = new TableColumn<>(header);
+        column.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[index]));
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item != null) {
+                    setText(item);
+                    setAlignment(Pos.CENTER);
+                } else {
+                    setText(null);
+                }
+            }
+        });
+
+        column.setSortable(false);
+        column.setReorderable(false);
+    
+        return column;
+    }
         
     private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
         for (Course course : dayData) {
