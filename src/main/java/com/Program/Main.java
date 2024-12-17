@@ -300,6 +300,11 @@ public class Main extends Application {
 
         // Edit Course Button
         editC.setOnAction(e -> {
+            ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
+            if (selectedCourses.size() > 1) {
+                showAlert("You can only edit 1 course at once!");
+                return;
+            }
             Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
             if (selectedCourse != null) {
                 TextInputDialog dialog = new TextInputDialog(selectedCourse.getName());
@@ -310,7 +315,7 @@ public class Main extends Application {
                 dialog.showAndWait().ifPresent(newName -> {
                     if (!newName.trim().isEmpty()) {
                         selectedCourse.setName(newName);
-                        courseLists.refresh(); // Listeyi yenile
+                        courseLists.refresh();
                         showAlert("Course edited successfully!");
                     } else {
                         showAlert("Course name cannot be empty!");
@@ -321,15 +326,17 @@ public class Main extends Application {
             }
         });
 
+
+        courseLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
         // Delete Course Button
         deleteC.setOnAction(e -> {
-            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
-            if (selectedCourse != null) {
-                courses.remove(selectedCourse);
-                courseLists.getItems().remove(selectedCourse);
-                showAlert("Course deleted successfully!");
+            ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
+            if (!selectedCourses.isEmpty()) {
+                courses.removeAll(selectedCourses);
+                courseLists.getItems().removeAll(selectedCourses);
+                showAlert("Selected courses deleted successfully!");
             } else {
-                showAlert("Please select a course to delete.");
+                showAlert("Please select at least one course to delete.");
             }
         });
 
@@ -390,6 +397,11 @@ public class Main extends Application {
         });
 
         editS.setOnAction(e -> {
+            ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
+            if (selectedStudents.size() > 1) {
+                showAlert("You can only edit 1 student at once!");
+                return;
+            }
             Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
             if (selectedStudent != null) {
                 TextInputDialog dialog = new TextInputDialog(selectedStudent.getFullName());
@@ -404,15 +416,21 @@ public class Main extends Application {
                         showAlert("Student edited successfully!");
                     }
                 });
+            } else {
+                showAlert("Please select a student to edit.");
             }
         });
 
+
+        studentLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
         deleteS.setOnAction(e -> {
-            Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
-            if (selectedStudent != null) {
-                students.remove(selectedStudent);
-                studentLists.getItems().remove(selectedStudent);
-                showAlert("Student deleted successfully!");
+            ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
+            if (!selectedStudents.isEmpty()) {
+                students.removeAll(selectedStudents);
+                studentLists.getItems().removeAll(selectedStudents);
+                showAlert("Selected students deleted successfully!");
+            } else {
+                showAlert("Please select at least one student to delete.");
             }
         });
 
@@ -471,6 +489,11 @@ public class Main extends Application {
         });
 
         editT.setOnAction(e -> {
+            ObservableList<Teacher> selectedTeachers = teacherLists.getSelectionModel().getSelectedItems();
+            if (selectedTeachers.size() > 1) {
+                showAlert("You can only edit 1 teacher at once!");
+                return;
+            }
             Teacher selectedTeacher = teacherLists.getSelectionModel().getSelectedItem();
             if (selectedTeacher != null) {
                 TextInputDialog dialog = new TextInputDialog(selectedTeacher.getFullName());
@@ -485,15 +508,21 @@ public class Main extends Application {
                         showAlert("Teacher edited successfully!");
                     }
                 });
+            } else {
+                showAlert("Please select a teacher to edit.");
             }
         });
 
+        teacherLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
+
         deleteT.setOnAction(e -> {
-            Teacher selectedTeacher = teacherLists.getSelectionModel().getSelectedItem();
-            if (selectedTeacher != null) {
-                teachers.remove(selectedTeacher);
-                teacherLists.getItems().remove(selectedTeacher);
-                showAlert("Teacher deleted successfully!");
+            ObservableList<Teacher> selectedTeachers = teacherLists.getSelectionModel().getSelectedItems();
+            if (!selectedTeachers.isEmpty()) {
+                teachers.removeAll(selectedTeachers);
+                teacherLists.getItems().removeAll(selectedTeachers);
+                showAlert("Selected teachers deleted successfully!");
+            } else {
+                showAlert("Please select at least one teacher to delete.");
             }
         });
 
