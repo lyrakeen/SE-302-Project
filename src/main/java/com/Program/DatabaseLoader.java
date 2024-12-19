@@ -218,7 +218,7 @@ public class DatabaseLoader {
         }
     }
     public void deleteCourse(String courseName) throws SQLException{
-        //Veritabanından silme:
+        //Veritabanından silme
         try(Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
             String deleteSQl = "DELETE FROM courses WHERE course_name = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSQl)) {
@@ -227,7 +227,43 @@ public class DatabaseLoader {
             }
         }
     //Bellek ve CourseManager içinden silme
-        courses.removeIf(course -> course.getName().equals(courseName));
+       courses.removeIf(course -> course.getName().equals(courseName));
+    }
+    public void deleteStudent(String studentName)throws SQLException{
+        //Veritabanından silme
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            // Tüm kursları getir ve öğrencinin olduğu kursları bul
+            String fetchCoursesSQL = "SELECT course_name, students, student_count FROM courses";
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(fetchCoursesSQL)) {
+                while (rs.next()) {
+                    String courseName = rs.getString("course_name");
+                    String students = rs.getString("students");
+                    int studentCount = rs.getInt("student_count");
+
+                    // Öğrenci listesinden adı çıkar
+                    List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
+                    if (studentList.removeIf(name -> name.equals(studentName))) {
+                        // Öğrenciyi sil ve student_count değerini güncelle
+                        String updatedStudents = String.join(",", studentList);
+                        String updateSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
+
+                        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+                            pstmt.setString(1, updatedStudents); // Güncellenmiş öğrenci listesi
+                            pstmt.setInt(2, studentCount - 1);   // Öğrenci sayısını azalt
+                            pstmt.setString(3, courseName);      // Kurs adı
+                            pstmt.executeUpdate();
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Bellekten öğrenciyi kaldır
+        students.removeIf(student -> student.getFullName().equals(studentName));
+        for (Course course : courses) {
+            course.getStudents().removeIf(student -> student.getFullName().equals(studentName));
+        }
     }
 
     // Getters

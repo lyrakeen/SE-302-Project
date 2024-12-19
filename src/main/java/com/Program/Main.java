@@ -335,7 +335,14 @@ public class Main extends Application {
         deleteC.setOnAction(e -> {
             ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
             if (!selectedCourses.isEmpty()) {
-                courses.removeAll(selectedCourses);
+                for(Course c : selectedCourses){
+                    try {
+                        databaseLoader.deleteCourse(c.getName());
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+               // courses.removeAll(selectedCourses); //Bunu zaten databaseLoader'ın deleteCourse methodu yapıyor.
                 courseLists.getItems().removeAll(selectedCourses);
                 showAlert("Selected courses deleted successfully!");
             } else {
@@ -429,6 +436,13 @@ public class Main extends Application {
         deleteS.setOnAction(e -> {
             ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
             if (!selectedStudents.isEmpty()) {
+                for(Student s : selectedStudents){
+                    try {
+                        databaseLoader.deleteStudent(s.getFullName());
+                    }catch(SQLException ex){
+                        throw new RuntimeException(ex);
+                    }
+                }
                 students.removeAll(selectedStudents);
                 studentLists.getItems().removeAll(selectedStudents);
                 showAlert("Selected students deleted successfully!");
@@ -556,7 +570,7 @@ public class Main extends Application {
             Label lecturerLabel = new Label("Lecturer :");
             Label lecturer = new Label(course.getLecturer());
             Label studentCountLabel = new Label("Student Count : ");
-            Label studentCount = new Label(Integer.toString(course.getStudents().size()+1));
+            Label studentCount = new Label(Integer.toString(course.getStudents().size()));
             ListView studentList = new ListView<>();
             List<Student> students = course.getStudents();
             List<String> studentNames = students.stream().map(Student::getFullName).collect(Collectors.toList());
