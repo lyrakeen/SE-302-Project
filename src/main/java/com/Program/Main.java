@@ -1,11 +1,10 @@
 package com.Program;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import javafx.scene.control.*;
 import javafx.util.Callback;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,20 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -36,7 +22,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.beans.property.SimpleStringProperty;
@@ -367,44 +352,109 @@ public class Main extends Application {
         studentLists.getItems().addAll(students);
 
         Button addStudentButton = new Button("Add Student");
+        Button editS = new Button("Edit");
+        Button deleteS = new Button("Delete");
+
         addStudentButton.setOnAction(e -> {
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Add Student");
             dialog.setHeaderText("Enter new student name");
             dialog.setContentText("Name:");
 
-            dialog.showAndWait().ifPresent(name -> {
-                if (!name.trim().isEmpty()) {
-                    Student newStudent = new Student(name);
-                    students.add(newStudent);
-                    studentLists.getItems().add(newStudent);
-                    showAlert("Student added successfully!");
+            dialog.setOnHidden(ev -> {
+                String studentName = dialog.getResult();
+                if (studentName != null && !studentName.trim().isEmpty()) {
+                    // Show course selection window
+                    Stage courseSelectionStage = new Stage();
+                    courseSelectionStage.setTitle("Select Courses for Student");
+
+                    VBox layout = new VBox(10);
+                    layout.setPadding(new Insets(10));
+
+                    Label instructionLabel = new Label("Select courses for the student:");
+                    ListView<Course> courseListView = new ListView<>();
+                    courseListView.getItems().addAll(courses);
+                    courseListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+                    Button confirmButton = new Button("Confirm");
+                    Button cancelButton = new Button("Cancel");
+
+                    HBox buttonBox = new HBox(10, confirmButton, cancelButton);
+                    buttonBox.setAlignment(Pos.CENTER);
+
+                    layout.getChildren().addAll(instructionLabel, courseListView, buttonBox);
+
+                    Scene scene = new Scene(layout);
+                    courseSelectionStage.setScene(scene);
+
+                    // Confirm Button Logic
+                    confirmButton.setOnAction(ev2 -> {
+                        List<Course> selectedCourses = courseListView.getSelectionModel().getSelectedItems();
+                        if (selectedCourses.isEmpty()) {
+                            showAlert("No courses selected!");
+                            return;
+                        }
+
+                        List<String> selectedCourseNames = selectedCourses.stream()
+                                .map(Course::getName)
+                                .collect(Collectors.toList());
+
+                        boolean hasConflict = false;
+
+                        // Check for time conflicts
+                        for (int i = 0; i < selectedCourses.size(); i++) {
+                            for (int j = i + 1; j < selectedCourses.size(); j++) {
+                                if (selectedCourses.get(i).isTimeConflict(selectedCourses.get(j))) {
+                                    hasConflict = true;
+                                    break;
+                                }
+                            }
+                            if (hasConflict) break;
+                        }
+
+                        if (hasConflict) {
+                            showAlert("Selected courses have time conflicts!");
+                        } else {
+                            try {
+                                // Hem veritabanına hem de belleğe kaydet
+                                databaseLoader.addStudent(studentName, selectedCourseNames);
+                                studentLists.getItems().add(new Student(studentName));
+                                showAlert("Student added successfully!");
+                                courseSelectionStage.close();
+                            } catch (SQLException ex) {
+                                ex.printStackTrace();
+                                showAlert("Failed to add student to the database.");
+                            }
+                        }
+                    });
+
+                    // Cancel Button Logic
+                    cancelButton.setOnAction(ev2 -> courseSelectionStage.close());
+
+                    // Customize how courses are displayed in the ListView
+                    courseListView.setCellFactory(param -> new ListCell<Course>() {
+                        @Override
+                        protected void updateItem(Course course, boolean empty) {
+                            super.updateItem(course, empty);
+                            if (empty || course == null) {
+                                setText(null);
+                            } else {
+                                setText(course.getName());
+                            }
+                        }
+                    });
+
+                    courseSelectionStage.showAndWait();
                 } else {
                     showAlert("Student name cannot be empty!");
                 }
             });
-        });
 
-        Button editS = new Button("Edit");
-        Button deleteS = new Button("Delete");
+            dialog.show();
+        });
 
         forButtons.getChildren().addAll(addStudentButton, editS, deleteS);
 
-        addStudentButton.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Add Student");
-            dialog.setHeaderText("Enter new student name");
-            dialog.setContentText("Name:");
-
-            dialog.showAndWait().ifPresent(name -> {
-                if (!name.trim().isEmpty()) {
-                    Student newStudent = new Student(name);
-                    students.add(newStudent);
-                    studentLists.getItems().add(newStudent);
-                    showAlert("Student added successfully!");
-                }
-            });
-        });
 
         editS.setOnAction(e -> {
             ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
@@ -868,7 +918,6 @@ public class Main extends Application {
                 break;
         }
     }
-
     private void adjustSize(TableView<?> table, TableColumn<?, ?>[] columns, double widthPercentage) {
         for (TableColumn<?, ?> column : columns) {
             column.prefWidthProperty().bind(table.widthProperty().multiply(widthPercentage));

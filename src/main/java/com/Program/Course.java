@@ -65,7 +65,16 @@ public class Course {
 
         return ends[index];
     }
+    public boolean isTimeConflict(Course otherCourse) {
+        // Aynı gün mü?
+        if (!this.getDay().equalsIgnoreCase(otherCourse.getDay())) {
+            return false; // Günler farklı, çakışma yok
+        }
 
+        // Zaman çakışması kontrolü
+        return !(this.getEndTime().compareTo(otherCourse.getStartTime()) <= 0 ||
+                this.getStartTime().compareTo(otherCourse.getEndTime()) >= 0);
+    }
     public String getName() {
         return name;
     }

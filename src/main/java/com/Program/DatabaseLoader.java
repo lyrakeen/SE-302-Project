@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DatabaseLoader {
     private List<Course> courses = new ArrayList<>();
@@ -258,13 +259,58 @@ public class DatabaseLoader {
                 }
             }
         }
-
         // 2. Bellekten öğrenciyi kaldır
         students.removeIf(student -> student.getFullName().equals(studentName));
         for (Course course : courses) {
             course.getStudents().removeIf(student -> student.getFullName().equals(studentName));
         }
     }
+        public void addStudent(String studentName, List<String> selectedCourses) throws SQLException {
+            // 1. Veritabanında güncelle
+            try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+                for (String courseName : selectedCourses) {
+                    // 1.1 Kursu bul ve öğrenci listesini güncelle
+                    String fetchSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
+                    try (PreparedStatement fetchStmt = connection.prepareStatement(fetchSQL)) {
+                        fetchStmt.setString(1, courseName);
+                        ResultSet rs = fetchStmt.executeQuery();
+
+                        if (rs.next()) {
+                            String students = rs.getString("students");
+                            int studentCount = rs.getInt("student_count");
+
+                            // Yeni öğrenciyi ekle
+                            List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
+                            studentList.add(studentName);
+                            String updatedStudents = String.join(",", studentList);
+
+                            // Veritabanını güncelle
+                            String updateSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
+                            try (PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
+                                updateStmt.setString(1, updatedStudents);
+                                updateStmt.setInt(2, studentCount + 1);
+                                updateStmt.setString(3, courseName);
+                                updateStmt.executeUpdate();
+                            }
+                            // 1.2 Bellekte güncelle (Kurs listesindeki Course objesini bul)
+                            for (Course course : courses) {
+                                if (course.getName().equals(courseName)) {
+                                    Student newStudent = new Student(studentName); // Yeni öğrenci objesi oluştur
+                                    course.getStudents().add(newStudent); // Kursun öğrenci listesine ekle
+                                    newStudent.enrollCourse(course); // Öğrencinin kurs listesine ekle
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+                    // 2. Belleğe yeni öğrenci ekle
+                    Student newStudent = new Student(studentName);
+                    students.add(newStudent);
+        }
+
+
 
     // Getters
     public List<Course> getCourses() { return courses; }
