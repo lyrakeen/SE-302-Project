@@ -418,7 +418,14 @@ public class Main extends Application {
                             try {
                                 // Hem veritabanına hem de belleğe kaydet
                                 databaseLoader.addStudent(studentName, selectedCourseNames);
-                                studentLists.getItems().add(new Student(studentName));
+                                Student newStudent = new Student(studentName);
+                                for (Course course : selectedCourses) {
+                                    newStudent.enrollCourse(course);
+                                    course.getStudents().add(newStudent);
+                                }
+                                students.add(newStudent);
+                                studentLists.getItems().add(newStudent);
+                                studentLists.refresh();
                                 showAlert("Student added successfully!");
                                 courseSelectionStage.close();
                             } catch (SQLException ex) {

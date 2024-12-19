@@ -292,22 +292,10 @@ public class DatabaseLoader {
                                 updateStmt.setString(3, courseName);
                                 updateStmt.executeUpdate();
                             }
-                            // 1.2 Bellekte güncelle (Kurs listesindeki Course objesini bul)
-                            for (Course course : courses) {
-                                if (course.getName().equals(courseName)) {
-                                    Student newStudent = new Student(studentName); // Yeni öğrenci objesi oluştur
-                                    course.getStudents().add(newStudent); // Kursun öğrenci listesine ekle
-                                    newStudent.enrollCourse(course); // Öğrencinin kurs listesine ekle
-                                    break;
-                                }
-                            }
                         }
                     }
                 }
             }
-                    // 2. Belleğe yeni öğrenci ekle
-                    Student newStudent = new Student(studentName);
-                    students.add(newStudent);
         }
 
 
