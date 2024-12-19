@@ -1,5 +1,8 @@
 package com.Program;
 
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,10 +74,24 @@ public class Course {
             return false; // Günler farklı, çakışma yok
         }
 
-        // Zaman çakışması kontrolü
-        return !(this.getEndTime().compareTo(otherCourse.getStartTime()) <= 0 ||
-                this.getStartTime().compareTo(otherCourse.getEndTime()) >= 0);
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm"); // Tek haneli saatler için
+
+        try {
+            // Zamanları LocalTime olarak hesapla
+            LocalTime thisStartTime = LocalTime.parse(this.getStartTime(), timeFormatter);
+            LocalTime thisEndTime = LocalTime.parse(this.getEndTime(), timeFormatter);
+            LocalTime otherStartTime = LocalTime.parse(otherCourse.getStartTime(), timeFormatter);
+            LocalTime otherEndTime = LocalTime.parse(otherCourse.getEndTime(), timeFormatter);
+
+            // Zaman çakışması kontrolü
+            return !(thisEndTime.isBefore(otherStartTime) || thisStartTime.isAfter(otherEndTime));
+        } catch (DateTimeParseException e) {
+            System.err.println("Error parsing time: " + e.getMessage());
+            return true; // Hata durumunda varsayılan olarak çakışma olduğunu kabul et
+        }
     }
+
+
     public String getName() {
         return name;
     }

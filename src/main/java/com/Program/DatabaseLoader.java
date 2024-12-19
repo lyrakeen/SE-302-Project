@@ -242,10 +242,8 @@ public class DatabaseLoader {
                     String students = rs.getString("students");
                     int studentCount = rs.getInt("student_count");
 
-                    // Öğrenci listesinden adı çıkar
                     List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
                     if (studentList.removeIf(name -> name.equals(studentName))) {
-                        // Öğrenciyi sil ve student_count değerini güncelle
                         String updatedStudents = String.join(",", studentList);
                         String updateSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
 
@@ -259,13 +257,59 @@ public class DatabaseLoader {
                 }
             }
         }
-        // 2. Bellekten öğrenciyi kaldır
         students.removeIf(student -> student.getFullName().equals(studentName));
         for (Course course : courses) {
             course.getStudents().removeIf(student -> student.getFullName().equals(studentName));
         }
     }
-        public void addStudent(String studentName, List<String> selectedCourses) throws SQLException {
+    public void updateStudentName(String oldName, String newName, String courseName) throws SQLException {
+        String updateSQL = "UPDATE courses " +
+                "SET students = REPLACE(students, ?, ?) " +
+                "WHERE course_name = ? AND students LIKE '%' || ? || '%'";
+
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
+             PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+
+            pstmt.setString(1, oldName);  // Eski isim
+            pstmt.setString(2, newName); // Yeni isim
+            pstmt.setString(3, courseName); // Kurs adı
+            pstmt.setString(4, oldName);  // Eski isim (kontrol için)
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Student name updated successfully in course: " + courseName);
+            } else {
+                System.out.println("No matching student found in course: " + courseName);
+            }
+        }
+    }
+    public void assignStudentToCourse(String studentName, String courseName) throws SQLException {
+        String fetchSQL = "SELECT students FROM courses WHERE course_name = ?";
+        String updateSQL = "UPDATE courses SET students = ? WHERE course_name = ?";
+
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
+             PreparedStatement fetchStmt = connection.prepareStatement(fetchSQL);
+             PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
+
+            // Mevcut öğrenci listesini al
+            fetchStmt.setString(1, courseName);
+            ResultSet rs = fetchStmt.executeQuery();
+
+            if (rs.next()) {
+                String students = rs.getString("students");
+                List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
+                studentList.add(studentName); // Yeni öğrenciyi ekle
+                String updatedStudents = String.join(",", studentList);
+
+                // Güncellenmiş öğrenci listesini veritabanına yaz
+                updateStmt.setString(1, updatedStudents);
+                updateStmt.setString(2, courseName);
+                updateStmt.executeUpdate();
+            }
+        }
+    }
+
+    public void addStudent(String studentName, List<String> selectedCourses) throws SQLException {
             // 1. Veritabanında güncelle
             try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
                 for (String courseName : selectedCourses) {
@@ -297,6 +341,61 @@ public class DatabaseLoader {
                 }
             }
         }
+    public void changeStudentCourse(String studentName, String oldCourseName, String newCourseName) throws SQLException {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            // 1. Eski dersten öğrenciyi kaldır
+            String fetchOldCourseSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
+            try (PreparedStatement fetchStmt = connection.prepareStatement(fetchOldCourseSQL)) {
+                fetchStmt.setString(1, oldCourseName);
+                ResultSet rs = fetchStmt.executeQuery();
+
+                if (rs.next()) {
+                    String students = rs.getString("students");
+                    int studentCount = rs.getInt("student_count");
+
+                    // Öğrenciyi çıkar
+                    List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
+                    studentList.remove(studentName);
+                    String updatedStudents = String.join(",", studentList);
+
+                    // Veritabanını güncelle
+                    String updateOldCourseSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateOldCourseSQL)) {
+                        updateStmt.setString(1, updatedStudents);
+                        updateStmt.setInt(2, studentCount - 1);
+                        updateStmt.setString(3, oldCourseName);
+                        updateStmt.executeUpdate();
+                    }
+                }
+            }
+
+            // 2. Yeni derse öğrenciyi ekle
+            String fetchNewCourseSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
+            try (PreparedStatement fetchStmt = connection.prepareStatement(fetchNewCourseSQL)) {
+                fetchStmt.setString(1, newCourseName);
+                ResultSet rs = fetchStmt.executeQuery();
+
+                if (rs.next()) {
+                    String students = rs.getString("students");
+                    int studentCount = rs.getInt("student_count");
+
+                    // Yeni öğrenciyi ekle
+                    List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
+                    studentList.add(studentName);
+                    String updatedStudents = String.join(",", studentList);
+
+                    // Veritabanını güncelle
+                    String updateNewCourseSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateNewCourseSQL)) {
+                        updateStmt.setString(1, updatedStudents);
+                        updateStmt.setInt(2, studentCount + 1);
+                        updateStmt.setString(3, newCourseName);
+                        updateStmt.executeUpdate();
+                    }
+                }
+            }
+        }
+    }
 
 
 

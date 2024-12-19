@@ -70,7 +70,9 @@ public class Main extends Application {
         fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
         helpMenu.getItems().addAll(aboutItem, manualItem);
 
-        courseItem.setOnAction(e -> {managingCourses();});
+        courseItem.setOnAction(e -> {
+            managingCourses();
+        });
         teacherItem.setOnAction(e -> managingTeachers());
         studentItem.setOnAction(e -> managingStudents());
 
@@ -90,7 +92,7 @@ public class Main extends Application {
 
         sketchuler.setStyle("-fx-font-size: 60px; " +
                 "-fx-text-fill:rgb(255, 157, 0); " +
-                "-fx-font-family: 'Caveat'; "+
+                "-fx-font-family: 'Caveat'; " +
                 "-fx-font-weight: normal;");
 
         toCenter.getChildren().add(sketchuler);
@@ -224,7 +226,8 @@ public class Main extends Application {
             alert.showAndWait();
         });
 
-        manualItem.setOnAction(e -> {showManual();
+        manualItem.setOnAction(e -> {
+            showManual();
         });
 
         table.setOnMouseClicked(event -> {
@@ -320,14 +323,14 @@ public class Main extends Application {
         deleteC.setOnAction(e -> {
             ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
             if (!selectedCourses.isEmpty()) {
-                for(Course c : selectedCourses){
+                for (Course c : selectedCourses) {
                     try {
                         databaseLoader.deleteCourse(c.getName());
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
                 }
-               // courses.removeAll(selectedCourses); //Bunu zaten databaseLoader'ın deleteCourse methodu yapıyor.
+                // courses.removeAll(selectedCourses); //Bunu zaten databaseLoader'ın deleteCourse methodu yapıyor.
                 courseLists.getItems().removeAll(selectedCourses);
                 showAlert("Selected courses deleted successfully!");
             } else {
@@ -464,25 +467,9 @@ public class Main extends Application {
 
 
         editS.setOnAction(e -> {
-            ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
-            if (selectedStudents.size() > 1) {
-                showAlert("You can only edit 1 student at once!");
-                return;
-            }
             Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
             if (selectedStudent != null) {
-                TextInputDialog dialog = new TextInputDialog(selectedStudent.getFullName());
-                dialog.setTitle("Edit Student");
-                dialog.setHeaderText("Edit student name");
-                dialog.setContentText("New Name:");
-
-                dialog.showAndWait().ifPresent(newName -> {
-                    if (!newName.trim().isEmpty()) {
-                        selectedStudent.setFullName(newName);
-                        studentLists.refresh();
-                        showAlert("Student edited successfully!");
-                    }
-                });
+                openEditStage(selectedStudent);
             } else {
                 showAlert("Please select a student to edit.");
             }
@@ -493,10 +480,10 @@ public class Main extends Application {
         deleteS.setOnAction(e -> {
             ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
             if (!selectedStudents.isEmpty()) {
-                for(Student s : selectedStudents){
+                for (Student s : selectedStudents) {
                     try {
                         databaseLoader.deleteStudent(s.getFullName());
-                    }catch(SQLException ex){
+                    } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
                 }
@@ -606,14 +593,14 @@ public class Main extends Application {
     }
 
 
-
     private void displayInfo(Object selected) {
         if (selected instanceof Course) { // search should be added
             infoRoot.getChildren().clear();
             try {
                 courseStudents.clear();
                 studentNames.clear();
-            } catch (Exception e){}
+            } catch (Exception e) {
+            }
 
             Course course = (Course) selected;
             Label nameLabel = new Label("Name :");
@@ -632,7 +619,7 @@ public class Main extends Application {
             List<Student> students = course.getStudents();
             List<String> studentNames = students.stream().map(Student::getFullName).collect(Collectors.toList());
             studentList.getItems().addAll(studentNames);
-            
+
             HBox nextBox = new HBox(5);
             VBox allIn = new VBox(5);
             HBox first = new HBox(5);
@@ -651,30 +638,33 @@ public class Main extends Application {
             third.getChildren().addAll(durationLabel, duration);
             fourth.getChildren().addAll(dayLabel, day);
             fifth.getChildren().addAll(lecturerLabel, lecturer);
-            sixth.getChildren().addAll(studentCountLabel,studentCount);
+            sixth.getChildren().addAll(studentCountLabel, studentCount);
             allIn.getChildren().addAll(sixth, fifth, fourth, third, second, first);
             nextBox.getChildren().addAll(allIn, studentList);
             infoRoot.getChildren().addAll(nextBox);
             infoStage.setScene(infoScene);
             infoStage.show();
-        } if (selected instanceof Student) {
+        }
+        if (selected instanceof Student) {
             infoRoot.getChildren().clear();
             Student student = (Student) selected;
             createScheduleTable(FXCollections.observableArrayList(student.getEnrolledCourses()), infoRoot, infoStage, infoScene);
             Label forStudent = new Label(student.getFullName() + "'s Weekly Program");
-            infoRoot.getChildren().add(0,forStudent); // BURAYA TASARIM YAPILACAK 
-        } if (selected instanceof Teacher) {
+            infoRoot.getChildren().add(0, forStudent); // BURAYA TASARIM YAPILACAK
+        }
+        if (selected instanceof Teacher) {
             infoRoot.getChildren().clear();
             Teacher teacher = (Teacher) selected;
             createScheduleTable(FXCollections.observableArrayList(teacher.getAssignedCourses()), infoRoot, infoStage, infoScene);
             Label forTeacher = new Label(teacher.getFullName() + "'s Weekly Program");
-            infoRoot.getChildren().add(0,forTeacher); // BURAYA TASARIM YAPILACAK 
-        } if (selected instanceof Classroom) {
+            infoRoot.getChildren().add(0, forTeacher); // BURAYA TASARIM YAPILACAK
+        }
+        if (selected instanceof Classroom) {
             infoRoot.getChildren().clear();
             Classroom classroom = (Classroom) selected;
             createScheduleTable(FXCollections.observableArrayList(classroom.getAssignedCourses()), infoRoot, infoStage, infoScene);
             Label forClass = new Label(classroom.getName() + "'s Weekly Program  Capacity : " + classroom.getCapacity());
-            infoRoot.getChildren().add(0,forClass); // BURAYA TASARIM YAPILACAK 
+            infoRoot.getChildren().add(0, forClass); // BURAYA TASARIM YAPILACAK
         }
     }
 
@@ -686,11 +676,11 @@ public class Main extends Application {
 
         @SuppressWarnings("unchecked") // to supress warnings
         ObservableList<Course>[] dayCourses = new ObservableList[]{
-            FXCollections.observableArrayList(), // Monday
-            FXCollections.observableArrayList(), // Tuesday
-            FXCollections.observableArrayList(), // Wednesday
-            FXCollections.observableArrayList(), // Thursday
-            FXCollections.observableArrayList()  // Friday
+                FXCollections.observableArrayList(), // Monday
+                FXCollections.observableArrayList(), // Tuesday
+                FXCollections.observableArrayList(), // Wednesday
+                FXCollections.observableArrayList(), // Thursday
+                FXCollections.observableArrayList()  // Friday
         };
 
         String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
@@ -724,16 +714,16 @@ public class Main extends Application {
             }
             infoTable.getItems().add(row);
         }
-        infoTable.getSelectionModel().setCellSelectionEnabled(false); 
+        infoTable.getSelectionModel().setCellSelectionEnabled(false);
         infoTable.setFocusTraversable(false);
         infoTable.setOnMouseClicked(event -> {
-            infoTable.getSelectionModel().clearSelection(); 
+            infoTable.getSelectionModel().clearSelection();
         });
         adjustSize(infoTable, infoTable.getColumns().toArray(new TableColumn[0]), 0.16);
         infoRoot.getChildren().addAll(infoTable);
         infoStage.setScene(infoScene);
         infoStage.show();
-        
+
     }
 
     private TableColumn<String[], String> createTableColumn(String header, int index) {
@@ -754,10 +744,10 @@ public class Main extends Application {
 
         column.setSortable(false);
         column.setReorderable(false);
-    
+
         return column;
     }
-        
+
     private void fillDayData(ObservableList<Course> dayData, String[] dayArr, String[] startTimes) {
         for (Course course : dayData) {
             int index = -1;
@@ -776,8 +766,8 @@ public class Main extends Application {
             }
         }
     }
-        
-        
+
+
     private void showManual() {
         manualStage.setTitle("Manual");
         VBox sidebar = new VBox(10);
@@ -925,6 +915,7 @@ public class Main extends Application {
                 break;
         }
     }
+
     private void adjustSize(TableView<?> table, TableColumn<?, ?>[] columns, double widthPercentage) {
         for (TableColumn<?, ?> column : columns) {
             column.prefWidthProperty().bind(table.widthProperty().multiply(widthPercentage));
@@ -946,6 +937,281 @@ public class Main extends Application {
         dialog.setContentText("Search term:");
         return dialog.showAndWait().orElse(null);
     }
+
+    private void openEditStage(Student selectedStudent) {
+      /*  ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
+        if (selectedStudents.size() > 1) {
+            showAlert("You can only edit 1 student at once!");
+            return;
+        }
+        Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
+        if (selectedStudent != null) {*/
+        // Edit sayfasını aç
+        Stage editStage = new Stage();
+        VBox editBox = new VBox(10);
+        editBox.setPadding(new Insets(10));
+        Label programLabel = new Label(selectedStudent.getFullName() + "'s Weekly Program");
+        VBox scheduleBox = new VBox();
+        Scene editScene = new Scene(editBox, 600, 400);
+        createScheduleTable(FXCollections.observableArrayList(selectedStudent.getEnrolledCourses()), scheduleBox, editStage, editScene);
+
+        Button renameButton = new Button("Rename");
+        Button changeCourseButton = new Button("Change Course");
+        Button assignCourseButton = new Button("Assign Course");
+
+        editStage.setScene(editScene);
+        editStage.setTitle("Edit Student - " + selectedStudent.getFullName());
+        editStage.show();
+
+        renameButton.setOnAction(ev -> {
+            TextInputDialog renameDialog = new TextInputDialog(selectedStudent.getFullName());
+            renameDialog.setTitle("Rename Student");
+            renameDialog.setHeaderText("Edit Student Name");
+            renameDialog.setContentText("New Name:");
+
+            renameDialog.showAndWait().ifPresent(newName -> {
+                if (newName.trim().isEmpty()) {
+                    showAlert("Name cannot be empty.");
+                    return;
+                }
+
+                try {
+                    // Öğrencinin kayıtlı olduğu derslerin isimlerini al
+                    List<String> enrolledCourseNames = selectedStudent.getEnrolledCourses()
+                            .stream()
+                            .map(Course::getName)
+                            .collect(Collectors.toList());
+
+                    // Her bir ders için öğrenci ismini güncelle
+                    for (String courseName : enrolledCourseNames) {
+                        databaseLoader.updateStudentName(selectedStudent.getFullName(), newName, courseName);
+                    }
+
+                    // Bellekte de güncelle
+                    selectedStudent.setFullName(newName);
+
+                    editStage.close();
+                        openEditStage(selectedStudent);
+                        showAlert("Student name updated successfully!");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        showAlert("Failed to update student name in database.");
+                    }
+
+            });
+        });
+
+        changeCourseButton.setOnAction(ev -> {
+            try {
+                // Mevcut kurslar için TableView oluştur
+                TableView<Course> enrolledTableView = new TableView<>();
+                enrolledTableView.setPlaceholder(new Label("No enrolled courses"));
+
+                TableColumn<Course, String> enrolledNameColumn = new TableColumn<>("Course Name");
+                enrolledNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getName()));
+
+                TableColumn<Course, String> enrolledDayColumn = new TableColumn<>("Day");
+                enrolledDayColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDay()));
+
+                TableColumn<Course, String> enrolledTimeColumn = new TableColumn<>("Time");
+                enrolledTimeColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTimeToStart()));
+
+                TableColumn<Course, String> enrolledDurationColumn = new TableColumn<>("Duration");
+                enrolledDurationColumn.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getDuration())));
+
+                enrolledTableView.getColumns().addAll(enrolledNameColumn, enrolledDayColumn, enrolledTimeColumn, enrolledDurationColumn);
+                enrolledTableView.getItems().addAll(selectedStudent.getEnrolledCourses());
+
+                // Mevcut olmayan kurslar için TableView oluştur
+                TableView<Course> availableTableView = new TableView<>();
+                availableTableView.setPlaceholder(new Label("No available courses"));
+
+                TableColumn<Course, String> availableNameColumn = new TableColumn<>("Course Name");
+                availableNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getName()));
+
+                TableColumn<Course, String> availableDayColumn = new TableColumn<>("Day");
+                availableDayColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDay()));
+
+                TableColumn<Course, String> availableTimeColumn = new TableColumn<>("Time");
+                availableTimeColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTimeToStart()));
+
+                TableColumn<Course, String> availableDurationColumn = new TableColumn<>("Duration");
+                availableDurationColumn.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getDuration())));
+
+                availableTableView.getColumns().addAll(availableNameColumn, availableDayColumn, availableTimeColumn, availableDurationColumn);
+
+                // Sadece öğrencinin almadığı dersleri ekle
+                List<Course> availableCourses = courses.stream()
+                        .filter(course -> !selectedStudent.getEnrolledCourses().contains(course))
+                        .collect(Collectors.toList());
+                availableTableView.getItems().addAll(availableCourses);
+
+                // Layout düzenlemesi
+                VBox enrolledBox = new VBox(10, new Label("Enrolled Courses:"), enrolledTableView);
+                VBox availableBox = new VBox(10, new Label("Available Courses:"), availableTableView);
+                HBox tableLayout = new HBox(20, enrolledBox, availableBox);
+
+                Button confirmButton = new Button("Confirm");
+                Button cancelButton = new Button("Cancel");
+                HBox buttonBox = new HBox(10, confirmButton, cancelButton);
+                buttonBox.setAlignment(Pos.CENTER);
+
+                VBox layout = new VBox(10, new Label("Select a course to remove and a course to add:"), tableLayout, buttonBox);
+                layout.setPadding(new Insets(10));
+
+                Scene changeCourseScene = new Scene(layout);
+                Stage changeCourseStage = new Stage();
+                changeCourseStage.setScene(changeCourseScene);
+                changeCourseStage.setTitle("Change Course for " + selectedStudent.getFullName());
+                changeCourseStage.show();
+
+                // Confirm butonu işlevi
+                confirmButton.setOnAction(eve -> {
+                    Course oldCourse = enrolledTableView.getSelectionModel().getSelectedItem();
+                    Course newCourse = availableTableView.getSelectionModel().getSelectedItem();
+
+                    if (oldCourse == null || newCourse == null) {
+                        showAlert("Please select both a course to remove and a course to add.");
+                        return;
+                    }
+
+                    if (selectedStudent.getEnrolledCourses().stream()
+                            .filter(course -> !course.equals(oldCourse)) // Kaldırılacak kurs hariç
+                            .anyMatch(course -> course.isTimeConflict(newCourse))) {
+                        showAlert("The new course conflicts with the student's schedule.");
+                        return;
+                    }
+
+                    try {
+                        // Veritabanında güncelle
+                        databaseLoader.changeStudentCourse(selectedStudent.getFullName(), oldCourse.getName(), newCourse.getName());
+
+                        // Bellekte güncelle
+                        selectedStudent.getEnrolledCourses().remove(oldCourse);
+                        oldCourse.getStudents().remove(selectedStudent);
+                        selectedStudent.getEnrolledCourses().add(newCourse);
+                        newCourse.getStudents().add(selectedStudent);
+
+                        editStage.close();
+                        openEditStage(selectedStudent);
+
+
+                        showAlert("Course changed successfully!");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        showAlert("Failed to change course in database.");
+                    }
+                    changeCourseStage.close();
+                });
+
+                // Cancel butonu işlevi
+                cancelButton.setOnAction(eve ->{
+                if(changeCourseStage.isShowing()){
+                    changeCourseStage.close();
+                }
+            });
+
+
+            }catch (Exception e){
+                showAlert("An unexpected error occurred. Please try again");
+            }
+        });
+
+        assignCourseButton.setOnAction(ev -> {
+            try{
+
+            TableView<Course> availableTableView = new TableView<>();
+            availableTableView.setPlaceholder(new Label("No available courses"));
+
+            TableColumn<Course, String> availableNameColumn = new TableColumn<>("Course Name");
+            availableNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getName()));
+
+            TableColumn<Course, String> availableDayColumn = new TableColumn<>("Day");
+            availableDayColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDay()));
+
+            TableColumn<Course, String> availableTimeColumn = new TableColumn<>("Time");
+            availableTimeColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTimeToStart()));
+
+            TableColumn<Course, String> availableDurationColumn = new TableColumn<>("Duration");
+            availableDurationColumn.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getDuration())));
+
+            availableTableView.getColumns().addAll(availableNameColumn, availableDayColumn, availableTimeColumn, availableDurationColumn);
+
+            // Sadece öğrencinin almadığı dersleri ekle
+            List<Course> availableCourses = courses.stream()
+                    .filter(course -> !selectedStudent.getEnrolledCourses().contains(course))
+                    .collect(Collectors.toList());
+            availableTableView.getItems().addAll(availableCourses);
+
+            // Layout düzenlemesi
+            VBox availableBox = new VBox(10, new Label("Available Courses:"), availableTableView);
+            Button confirmButton = new Button("Confirm");
+            Button cancelButton = new Button("Cancel");
+            HBox buttonBox = new HBox(10, confirmButton, cancelButton);
+            buttonBox.setAlignment(Pos.CENTER);
+
+            VBox layout = new VBox(10, new Label("Select a course to assign:"), availableBox, buttonBox);
+            layout.setPadding(new Insets(10));
+
+            Scene assignCourseScene = new Scene(layout);
+            Stage assignCourseStage = new Stage();
+            assignCourseStage.setScene(assignCourseScene);
+            assignCourseStage.setTitle("Assign Course to " + selectedStudent.getFullName());
+            assignCourseStage.show();
+
+            // Confirm butonu işlevi
+            confirmButton.setOnAction(eve -> {
+                Course newCourse = availableTableView.getSelectionModel().getSelectedItem();
+
+                if (newCourse == null) {
+                    showAlert("Please select a course to assign.");
+                    return;
+                }
+
+
+                    // Yeni kursun zaman çakışmasını kontrol et
+                    if (selectedStudent.getEnrolledCourses().stream().anyMatch(course -> course.isTimeConflict(newCourse))) {
+                        showAlert("The new course conflicts with the student's schedule.");
+                        return;
+                    }
+
+                try {
+                    // Veritabanında güncelle
+                    databaseLoader.assignStudentToCourse(selectedStudent.getFullName(), newCourse.getName());
+
+                    // Bellekte güncelle
+                    selectedStudent.getEnrolledCourses().add(newCourse);
+                    newCourse.getStudents().add(selectedStudent);
+
+                    // Edit sayfasını yeniden başlat
+                    editStage.close();
+                    openEditStage(selectedStudent);
+
+                    showAlert("Course assigned successfully!");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showAlert("Failed to assign course in database.");
+                }
+                assignCourseStage.close();
+            });
+
+            // Cancel butonu işlevi
+            cancelButton.setOnAction(eve ->{
+                if(assignCourseStage.isShowing()){
+                    assignCourseStage.close();
+                }
+            });
+        }catch (Exception e){
+            showAlert("An unexpected error occurred. Please try again");
+        }
+        });
+
+        HBox buttonBox = new HBox(10, renameButton, changeCourseButton, assignCourseButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        editBox.getChildren().addAll(programLabel, scheduleBox, buttonBox);
+    }
+
 
     public static void main(String[] args) {
 
