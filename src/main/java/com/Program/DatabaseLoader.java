@@ -206,6 +206,16 @@ public class DatabaseLoader {
             }
         }
     }
+    public void updateCourseName(String oldName, String newName) throws SQLException {
+        String updateSQL = "UPDATE courses SET course_name = ? WHERE course_name = ?";
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
+             PreparedStatement stmt = connection.prepareStatement(updateSQL)) {
+            stmt.setString(1, newName);
+            stmt.setString(2, oldName);
+            stmt.executeUpdate();
+        }
+    }
+
     public void updateCourseClassroom(String courseName, String classroomName){
         try(Connection connection =DriverManager.getConnection("jdbc:sqlite:university.db")) {
             String updateSQL = "UPDATE courses SET classroom_name = ? WHERE course_name = ?";

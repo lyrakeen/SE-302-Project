@@ -291,30 +291,105 @@ public class Main extends Application {
 
         // Edit Course Button
         editC.setOnAction(e -> {
-            ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
-            if (selectedCourses.size() > 1) {
-                showAlert("You can only edit 1 course at once!");
+            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
+            if (selectedCourse == null) {
+                showAlert("Please select a course to edit.");
                 return;
             }
-            Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
-            if (selectedCourse != null) {
-                TextInputDialog dialog = new TextInputDialog(selectedCourse.getName());
-                dialog.setTitle("Edit Course");
-                dialog.setHeaderText("Edit course name");
-                dialog.setContentText("New Name:");
 
-                dialog.showAndWait().ifPresent(newName -> {
-                    if (!newName.trim().isEmpty()) {
+            Stage editStage = new Stage();
+            VBox editBox = new VBox(10);
+            editBox.setPadding(new Insets(10));
+
+            // Kurs bilgilerini göster
+            Label nameLabel = new Label("Course Name: " + selectedCourse.getName());
+            Label timeLabel = new Label("Start Time: " + selectedCourse.getTimeToStart());
+            Label durationLabel = new Label("Duration: " + selectedCourse.getDuration());
+            Label dayLabel = new Label("Day: " + selectedCourse.getDay());
+            Label classroomLabel = new Label("Classroom: " +
+                    (selectedCourse.getClassroom() != null ? selectedCourse.getClassroom().getName() : "No Classroom"));
+
+            // Rename Button
+            Button renameButton = new Button("Rename");
+            renameButton.setOnAction(ev -> {
+                TextInputDialog renameDialog = new TextInputDialog(selectedCourse.getName());
+                renameDialog.setTitle("Rename Course");
+                renameDialog.setHeaderText("Change Course Name");
+                renameDialog.setContentText("New Name:");
+                renameDialog.showAndWait().ifPresent(newName -> {
+                    if (newName.trim().isEmpty()) {
+                        showAlert("Course name cannot be empty.");
+                        return;
+                    }
+                    try {
+                        databaseLoader.updateCourseName(selectedCourse.getName(), newName);
                         selectedCourse.setName(newName);
+                        nameLabel.setText("Course Name: " + newName);
                         courseLists.refresh();
-                        showAlert("Course edited successfully!");
-                    } else {
-                        showAlert("Course name cannot be empty!");
+                        showAlert("Course name updated successfully!");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        showAlert("Failed to update course name in database.");
                     }
                 });
-            } else {
-                showAlert("Please select a course to edit.");
-            }
+            });
+
+            // Change Classroom Button
+            Button changeClassroomButton = new Button("Change Classroom");
+            changeClassroomButton.setOnAction(ev -> {
+                ListView<Classroom> classroomList = new ListView<>();
+                classroomList.getItems().addAll(classrooms);
+                classroomList.setCellFactory(param -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(Classroom classroom, boolean empty) {
+                        super.updateItem(classroom, empty);
+                        if (empty || classroom == null) {
+                            setText(null);
+                        } else {
+                            setText(classroom.getName() + " (Capacity: " + classroom.getCapacity() + ")");
+                        }
+                    }
+                });
+
+                Stage classroomStage = new Stage();
+                VBox classroomBox = new VBox(10, new Label("Select a Classroom:"), classroomList);
+                classroomBox.setPadding(new Insets(10));
+                Scene classroomScene = new Scene(classroomBox);
+                classroomStage.setScene(classroomScene);
+                classroomStage.setTitle("Change Classroom");
+                classroomStage.show();
+
+                classroomList.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2) {
+                        Classroom selectedClassroom = classroomList.getSelectionModel().getSelectedItem();
+                        if (selectedClassroom != null) {
+                            // Kapasite kontrolü
+                            if (selectedClassroom.getCapacity() < selectedCourse.getStudents().size()) {
+                                showAlert("Classroom capacity is insufficient for this course!");
+                                return;
+                            }
+
+                                databaseLoader.updateCourseClassroom(selectedCourse.getName(), selectedClassroom.getName());
+                                selectedCourse.setClassroom(selectedClassroom);
+                                classroomLabel.setText("Classroom: " + selectedClassroom.getName());
+                                classroomStage.close();
+                                showAlert("Classroom updated successfully!");
+
+
+                        }
+                    }
+                });
+            });
+
+            HBox buttonBox = new HBox(10, renameButton, changeClassroomButton);
+            buttonBox.setAlignment(Pos.CENTER);
+
+            editBox.getChildren().addAll(nameLabel, timeLabel, durationLabel, dayLabel, classroomLabel, buttonBox);
+
+            Scene editScene = new Scene(editBox);
+            editStage.setScene(editScene);
+            editStage.setTitle("Edit Course");
+            editStage.show();
         });
 
 
@@ -469,7 +544,7 @@ public class Main extends Application {
         editS.setOnAction(e -> {
             Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
             if (selectedStudent != null) {
-                openEditStage(selectedStudent);
+                openStudentEditStage(selectedStudent);
             } else {
                 showAlert("Please select a student to edit.");
             }
@@ -938,14 +1013,7 @@ public class Main extends Application {
         return dialog.showAndWait().orElse(null);
     }
 
-    private void openEditStage(Student selectedStudent) {
-      /*  ObservableList<Student> selectedStudents = studentLists.getSelectionModel().getSelectedItems();
-        if (selectedStudents.size() > 1) {
-            showAlert("You can only edit 1 student at once!");
-            return;
-        }
-        Student selectedStudent = studentLists.getSelectionModel().getSelectedItem();
-        if (selectedStudent != null) {*/
+    private void openStudentEditStage(Student selectedStudent) {
         // Edit sayfasını aç
         Stage editStage = new Stage();
         VBox editBox = new VBox(10);
@@ -991,7 +1059,7 @@ public class Main extends Application {
                     selectedStudent.setFullName(newName);
 
                     editStage.close();
-                        openEditStage(selectedStudent);
+                    openStudentEditStage(selectedStudent);
                         showAlert("Student name updated successfully!");
                     } catch (SQLException ex) {
                         ex.printStackTrace();
@@ -1093,7 +1161,7 @@ public class Main extends Application {
                         newCourse.getStudents().add(selectedStudent);
 
                         editStage.close();
-                        openEditStage(selectedStudent);
+                        openStudentEditStage(selectedStudent);
 
 
                         showAlert("Course changed successfully!");
@@ -1185,7 +1253,7 @@ public class Main extends Application {
 
                     // Edit sayfasını yeniden başlat
                     editStage.close();
-                    openEditStage(selectedStudent);
+                    openStudentEditStage(selectedStudent);
 
                     showAlert("Course assigned successfully!");
                 } catch (SQLException ex) {
