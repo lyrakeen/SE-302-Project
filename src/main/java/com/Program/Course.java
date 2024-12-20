@@ -58,31 +58,34 @@ public class Course {
     private String calculateEndTime(String startTime, int durationInHours) {
         String[] starts = {"8:30","9:25","10:20","11:15","12:10","13:05", "14:00", "14:55", "15:50","16:45", "17:40", "18:35"};
         String[] ends = {"9:15","10:10","11:05","12:00","12:55","13:50","14:45","15:40","16:35","17:30","18:25","19:20" };
-        String[] timeParts = startTime.split(":");
-        int index = durationInHours-1;
-        for(String start : starts) {
-            if (start.equals(startTime)) {
+        int index = -1;
+        // Başlangıç saatini bul
+        for (int i = 0; i < starts.length; i++) {
+            if (starts[i].equals(startTime)) {
+                index = i;
                 break;
-            } else {index++;}
+            }
         }
-
+        if (index == -1) {throw new IllegalArgumentException("Invalid start time: " + startTime);}
+        // Bitiş saatini hesapla
+        index += durationInHours - 1;
+        if (index >= ends.length) {throw new IllegalArgumentException("Invalid duration: End time exceeds schedule limits.");}
         return ends[index];
     }
+
+
     public boolean isTimeConflict(Course otherCourse) {
-        // Aynı gün mü?
+        // Gün kontrolü
         if (!this.getDay().equalsIgnoreCase(otherCourse.getDay())) {
-            return false; // Günler farklı, çakışma yok
+            return false; // Günler farklı
         }
-
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm"); // Tek haneli saatler için
-
         try {
             // Zamanları LocalTime olarak hesapla
             LocalTime thisStartTime = LocalTime.parse(this.getStartTime(), timeFormatter);
             LocalTime thisEndTime = LocalTime.parse(this.getEndTime(), timeFormatter);
             LocalTime otherStartTime = LocalTime.parse(otherCourse.getStartTime(), timeFormatter);
             LocalTime otherEndTime = LocalTime.parse(otherCourse.getEndTime(), timeFormatter);
-
             // Zaman çakışması kontrolü
             return !(thisEndTime.isBefore(otherStartTime) || thisStartTime.isAfter(otherEndTime));
         } catch (DateTimeParseException e) {

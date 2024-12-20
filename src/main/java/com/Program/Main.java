@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 import javafx.application.Application;
@@ -271,21 +273,46 @@ public class Main extends Application {
         forButtons.getChildren().addAll(addCourseButton, editC, deleteC);
 
         // Add Course Button
-        addCourseButton.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Add Course");
-            dialog.setHeaderText("Enter new course name");
-            dialog.setContentText("Course Name:");
+        addCourseButton.setOnAction(ev -> {
+            Stage addCourseStage = new Stage();
+            VBox inputBox = new VBox(10);
+            inputBox.setPadding(new Insets(10));
 
-            dialog.showAndWait().ifPresent(courseName -> {
-                if (!courseName.trim().isEmpty()) {
-                    Course newCourse = new Course(courseName, "08:30", 1, "Unknown", ""); // Default Course Data
-                    courses.add(newCourse);
-                    courseLists.getItems().add(newCourse);
-                    showAlert("Course added successfully!");
-                } else {
-                    showAlert("Course name cannot be empty!");
+            // Course Name Input
+            TextField courseNameField = new TextField();
+            courseNameField.setPromptText("Enter course name");
+
+            // Lecturer Selection
+            ComboBox<Teacher> lecturerComboBox = new ComboBox<>();
+            lecturerComboBox.getItems().addAll(teachers);
+            lecturerComboBox.setPromptText("Select Lecturer");
+
+            // Next Button
+            Button nextButton = new Button("Next");
+
+            inputBox.getChildren().addAll(
+                    new Label("Course Name:"), courseNameField,
+                    new Label("Select Lecturer:"), lecturerComboBox,
+                    nextButton
+            );
+
+            Scene addCourseScene = new Scene(inputBox, 400, 300);
+            addCourseStage.setScene(addCourseScene);
+            addCourseStage.setTitle("Add New Course");
+            addCourseStage.show();
+
+            // Next Button Action
+            nextButton.setOnAction(e -> {
+                String courseName = courseNameField.getText().trim();
+                Teacher selectedTeacher = lecturerComboBox.getValue();
+
+                if (courseName.isEmpty() || selectedTeacher == null) {
+                    showAlert("All fields must be filled out.");
+                    return;
                 }
+
+                // Öğretmenin programını göster
+                showTeacherSchedule(addCourseStage, courseName, selectedTeacher);
             });
         });
 
@@ -1279,7 +1306,228 @@ public class Main extends Application {
 
         editBox.getChildren().addAll(programLabel, scheduleBox, buttonBox);
     }
+    private void showTeacherSchedule(Stage previousStage, String courseName, Teacher teacher) {
+        previousStage.close();
 
+        Stage scheduleStage = new Stage();
+        VBox scheduleBox = new VBox(10);
+        scheduleBox.setPadding(new Insets(10));
+
+        Label teacherLabel = new Label("Schedule for " + teacher.getFullName());
+
+        // Yeni bir VBox oluştur ve mevcut metodu çağır
+        VBox scheduleTableBox = new VBox(); // Her çağrıda yeni VBox
+        createScheduleTable(FXCollections.observableArrayList(teacher.getAssignedCourses()), scheduleTableBox, scheduleStage, new Scene(new VBox()));
+
+        // Gün/Saat/Süre Seçimi
+        ComboBox<String> dayComboBox = new ComboBox<>();
+        dayComboBox.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
+        dayComboBox.setPromptText("Select Day");
+
+        ComboBox<String> timeComboBox = new ComboBox<>();
+        timeComboBox.getItems().addAll("8:30", "9:25", "10:20", "11:15", "12:10", "13:05", "14:00", "14:55", "15:50", "16:45", "17:40", "18:35");
+        timeComboBox.setPromptText("Select Start Time");
+
+        Spinner<Integer> durationSpinner = new Spinner<>(1, 4, 1); // Minimum 1, Maximum 4
+        durationSpinner.setEditable(true);
+
+        Button proceedButton = new Button("Proceed");
+
+        scheduleBox.getChildren().addAll(
+                teacherLabel, scheduleTableBox,
+                new Label("Day:"), dayComboBox,
+                new Label("Start Time:"), timeComboBox,
+                new Label("Duration (hours):"), durationSpinner,
+                proceedButton
+        );
+
+        Scene scheduleScene = new Scene(scheduleBox, 500, 400);
+        scheduleStage.setScene(scheduleScene);
+        scheduleStage.setTitle("Select Schedule for Course");
+        scheduleStage.show();
+
+        // Proceed Button Action
+        proceedButton.setOnAction(ev -> {
+            String day = dayComboBox.getValue();
+            String startTime = timeComboBox.getValue();
+            int duration = durationSpinner.getValue();
+
+            if (day == null || startTime == null) {
+                showAlert("Please select day and start time.");
+                return;
+            }
+            String timeToStart = day + " " + startTime;
+            try {
+                Course tempCourse = new Course(courseName, timeToStart, duration, teacher.getFullName(), "");
+                boolean hasConflict = teacher.getAssignedCourses().stream().anyMatch(tempCourse::isTimeConflict);
+
+                if (hasConflict) {
+                    showAlert("The new schedule conflicts with the teacher's program.");
+                    return;
+                }
+            } catch (IllegalArgumentException e) {
+                showAlert(e.getMessage());
+                return;
+            }
+                showStudentSelection(scheduleStage, courseName, timeToStart, duration, teacher);
+
+        });
+    }
+    private void showStudentSelection(Stage previousStage, String courseName, String timeToStart, int duration, Teacher teacher) {
+        previousStage.close();
+
+        Stage studentSelectionStage = new Stage();
+        VBox selectionBox = new VBox(10);
+        selectionBox.setPadding(new Insets(10));
+
+        // Toplam ve seçilen öğrenci sayısını gösteren sayaçlar
+        Label totalStudentCountLabel = new Label();
+        Label selectedStudentCountLabel = new Label("Selected Students: 0");
+
+        ComboBox<Student> studentComboBox = new ComboBox<>();
+        studentComboBox.setPromptText("Select a student");
+
+        // Toplam öğrencileri ComboBox'a ekle
+        List<Student> availableStudents = students.stream()
+                .filter(student -> student.getEnrolledCourses().stream().noneMatch(course ->
+                        course.isTimeConflict(new Course(courseName, timeToStart, duration, teacher.getFullName(), ""))
+                ))
+                .toList();
+
+        totalStudentCountLabel.setText("Total Students: " + availableStudents.size());
+        studentComboBox.getItems().addAll(availableStudents);
+
+        ListView<Student> selectedStudentListView = new ListView<>();
+        ObservableList<Student> selectedStudents = FXCollections.observableArrayList();
+        selectedStudentListView.setItems(selectedStudents);
+
+        Button addButton = new Button("Add");
+        Button confirmButton = new Button("Confirm");
+        Button cancelButton = new Button("Cancel");
+
+        HBox buttonBox = new HBox(10, confirmButton, cancelButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        addButton.setOnAction(ev -> {
+            Student selectedStudent = studentComboBox.getSelectionModel().getSelectedItem();
+            if (selectedStudent != null && !selectedStudents.contains(selectedStudent)) {
+                selectedStudents.add(selectedStudent);
+                selectedStudentCountLabel.setText("Selected Students: " + selectedStudents.size());
+            } else {
+                showAlert("Please select a valid student.");
+            }
+        });
+
+        confirmButton.setOnAction(ev -> {
+            if (selectedStudents.isEmpty()) {
+                showAlert("Please select at least one student.");
+                return;
+            }
+
+            // Show Classroom Selection Screen
+            showClassroomSelection(studentSelectionStage, courseName, timeToStart, duration, teacher, selectedStudents);
+        });
+
+        cancelButton.setOnAction(ev -> studentSelectionStage.close());
+
+        selectionBox.getChildren().addAll(
+                totalStudentCountLabel,
+                selectedStudentCountLabel,
+                new Label("Select Students for the Course:"),
+                studentComboBox,
+                addButton,
+                new Label("Selected Students:"),
+                selectedStudentListView,
+                buttonBox
+        );
+
+        Scene studentSelectionScene = new Scene(selectionBox, 400, 400);
+        studentSelectionStage.setScene(studentSelectionScene);
+        studentSelectionStage.setTitle("Select Students for Course");
+        studentSelectionStage.show();
+    }
+
+
+    private void showClassroomSelection(Stage previousStage, String courseName, String timeToStart, int duration, Teacher teacher, List<Student> selectedStudents) {
+        previousStage.close();
+        Stage classroomSelectionStage = new Stage();
+        VBox selectionBox = new VBox(10);
+        selectionBox.setPadding(new Insets(10));
+
+        // Toplam öğrenci sayısını göster
+        Label studentCountLabel = new Label("Total Students Selected: " + selectedStudents.size());
+
+        // Sınıf seçim listesi
+        ListView<Classroom> classroomList = new ListView<>();
+        classroomList.getItems().addAll(classrooms.stream().filter(classroom -> {
+                            // Kapasite kontrolü
+                            if (classroom.getCapacity() < selectedStudents.size()) {
+                                return false;
+                            }
+                            // Zaman çakışması kontrolü
+                            return classroom.getAssignedCourses().stream().noneMatch(course ->
+                                    new Course(courseName, timeToStart, duration, teacher.getFullName(), "").isTimeConflict(course)
+                            );
+                        })
+                        .toArray(Classroom[]::new)
+        );
+
+        classroomList.setPlaceholder(new Label("No available classrooms."));
+        classroomList.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(Classroom classroom, boolean empty) {
+                super.updateItem(classroom, empty);
+                if (empty || classroom == null) {
+                    setText(null);
+                } else {
+                    setText(classroom.getName() + " (Capacity: " + classroom.getCapacity() + ")");
+                }
+            }
+        });
+
+        Button confirmButton = new Button("Confirm");
+        Button cancelButton = new Button("Cancel");
+
+        HBox buttonBox = new HBox(10, confirmButton, cancelButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        selectionBox.getChildren().addAll(
+                new Label("Select a Classroom for the Course:"),
+                studentCountLabel,
+                classroomList,
+                buttonBox
+        );
+        Scene classroomSelectionScene = new Scene(selectionBox, 400, 300);
+        classroomSelectionStage.setScene(classroomSelectionScene);
+        classroomSelectionStage.setTitle("Select Classroom");
+        classroomSelectionStage.show();
+
+        // Confirm Button Action
+        confirmButton.setOnAction(ev -> {
+            Classroom selectedClassroom = classroomList.getSelectionModel().getSelectedItem();
+            if (selectedClassroom == null) {
+                showAlert("Please select a classroom.");
+                return;
+            }
+            // Course ekleme işlemi
+            Course newCourse = new Course(courseName, timeToStart, duration, teacher.getFullName(), "");
+            newCourse.setClassroom(selectedClassroom);
+            for (Student student : selectedStudents) {
+                student.enrollCourse(newCourse);
+                newCourse.getStudents().add(student);
+            }
+            selectedClassroom.getAssignedCourses().add(newCourse);
+            courses.add(newCourse);
+            databaseLoader.addCourse(newCourse);
+            // Kaydedilen bilgileri göster
+            showAlert("Course added successfully!\n" +
+                    "Classroom: " + selectedClassroom.getName() + "\n" +
+                    "Students: " + selectedStudents.size());
+            classroomSelectionStage.close();
+        });
+        // Cancel Button Action
+        cancelButton.setOnAction(ev -> classroomSelectionStage.close());
+    }
 
     public static void main(String[] args) {
 

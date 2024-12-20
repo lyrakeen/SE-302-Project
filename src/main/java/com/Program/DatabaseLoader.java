@@ -240,6 +240,42 @@ public class DatabaseLoader {
     //Bellek ve CourseManager içinden silme
        courses.removeIf(course -> course.getName().equals(courseName));
     }
+    public void addCourse(Course course) {
+        String courseInsertSQL = "INSERT INTO courses (course_name, time_to_start, duration_in_lecture_hours, lecturer, students, student_count, classroom_name) VALUES (?, ?, ?, ?, ?, ?, ?);";
+
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            // Course bilgilerini ekle
+            try (PreparedStatement courseStmt = connection.prepareStatement(courseInsertSQL)) {
+                courseStmt.setString(1, course.getName());
+                courseStmt.setString(2, course.getTimeToStart());
+                courseStmt.setInt(3, course.getDuration());  // Güncellenmiş sütun
+                courseStmt.setString(4, course.getLecturer());
+                String studentsCsv = String.join(",", course.getStudents().stream().map(Student::getFullName).toList());
+                courseStmt.setString(5, studentsCsv);
+                courseStmt.setInt(6, course.getStudents().size());
+                courseStmt.setString(7, course.getClassroom().getName());
+                courseStmt.executeUpdate();
+            }
+
+            // Öğrenci bilgilerini güncelle
+            String courseUpdateSQL = "UPDATE courses " +
+                    "SET students = CASE " +
+                    "WHEN students IS NULL THEN ? " +
+                    "ELSE students || ',' || ? " +
+                    "END " +
+                    "WHERE course_name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(courseUpdateSQL)) {
+                for (Student student : course.getStudents()) {
+                    pstmt.setString(1, student.getFullName()); // Eğer NULL ise eklenen öğrenci
+                    pstmt.setString(2, student.getFullName()); // Eğer mevcut veri varsa eklenir
+                    pstmt.setString(3, course.getName()); // Hangi kursa ekleneceği
+                    pstmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     public void deleteStudent(String studentName)throws SQLException{
         //Veritabanından silme
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
@@ -279,11 +315,10 @@ public class DatabaseLoader {
 
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
              PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
-
-            pstmt.setString(1, oldName);  // Eski isim
-            pstmt.setString(2, newName); // Yeni isim
-            pstmt.setString(3, courseName); // Kurs adı
-            pstmt.setString(4, oldName);  // Eski isim (kontrol için)
+                 pstmt.setString(1, oldName);  // Eski isim
+                 pstmt.setString(2, newName); // Yeni isim
+                 pstmt.setString(3, courseName); // Kurs adı
+                 pstmt.setString(4, oldName);  // Eski isim (kontrol için)
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -300,7 +335,6 @@ public class DatabaseLoader {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
              PreparedStatement fetchStmt = connection.prepareStatement(fetchSQL);
              PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
-
             // Mevcut öğrenci listesini al
             fetchStmt.setString(1, courseName);
             ResultSet rs = fetchStmt.executeQuery();
@@ -320,10 +354,10 @@ public class DatabaseLoader {
     }
 
     public void addStudent(String studentName, List<String> selectedCourses) throws SQLException {
-            // 1. Veritabanında güncelle
+            //Veritabanında güncelle
             try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
                 for (String courseName : selectedCourses) {
-                    // 1.1 Kursu bul ve öğrenci listesini güncelle
+                    //Kursu bul ve öğrenci listesini güncelle
                     String fetchSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
                     try (PreparedStatement fetchStmt = connection.prepareStatement(fetchSQL)) {
                         fetchStmt.setString(1, courseName);
@@ -353,7 +387,7 @@ public class DatabaseLoader {
         }
     public void changeStudentCourse(String studentName, String oldCourseName, String newCourseName) throws SQLException {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
-            // 1. Eski dersten öğrenciyi kaldır
+            // Eski dersten öğrenciyi kaldır
             String fetchOldCourseSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
             try (PreparedStatement fetchStmt = connection.prepareStatement(fetchOldCourseSQL)) {
                 fetchStmt.setString(1, oldCourseName);
@@ -379,7 +413,7 @@ public class DatabaseLoader {
                 }
             }
 
-            // 2. Yeni derse öğrenciyi ekle
+            // Yeni derse öğrenciyi ekle
             String fetchNewCourseSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
             try (PreparedStatement fetchStmt = connection.prepareStatement(fetchNewCourseSQL)) {
                 fetchStmt.setString(1, newCourseName);
