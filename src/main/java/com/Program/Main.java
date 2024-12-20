@@ -272,22 +272,18 @@ public class Main extends Application {
 
         forButtons.getChildren().addAll(addCourseButton, editC, deleteC);
 
-        // Add Course Button
         addCourseButton.setOnAction(ev -> {
             Stage addCourseStage = new Stage();
             VBox inputBox = new VBox(10);
             inputBox.setPadding(new Insets(10));
-
-            // Course Name Input
+            
             TextField courseNameField = new TextField();
             courseNameField.setPromptText("Enter course name");
 
-            // Lecturer Selection
             ComboBox<Teacher> lecturerComboBox = new ComboBox<>();
             lecturerComboBox.getItems().addAll(teachers);
             lecturerComboBox.setPromptText("Select Lecturer");
 
-            // Next Button
             Button nextButton = new Button("Next");
 
             inputBox.getChildren().addAll(
@@ -301,7 +297,6 @@ public class Main extends Application {
             addCourseStage.setTitle("Add New Course");
             addCourseStage.show();
 
-            // Next Button Action
             nextButton.setOnAction(e -> {
                 String courseName = courseNameField.getText().trim();
                 Teacher selectedTeacher = lecturerComboBox.getValue();
@@ -316,7 +311,6 @@ public class Main extends Application {
             });
         });
 
-        // Edit Course Button
         editC.setOnAction(e -> {
             Course selectedCourse = courseLists.getSelectionModel().getSelectedItem();
             if (selectedCourse == null) {
@@ -630,10 +624,9 @@ public class Main extends Application {
             });
         });
 
-        Button editT = new Button("Edit");
         Button deleteT = new Button("Delete");
 
-        forButtons.getChildren().addAll(addTeacherButton, editT, deleteT);
+        forButtons.getChildren().addAll(addTeacherButton, deleteT);
 
         addTeacherButton.setOnAction(e -> {
             TextInputDialog dialog = new TextInputDialog();
@@ -651,41 +644,28 @@ public class Main extends Application {
             });
         });
 
-        editT.setOnAction(e -> {
-            ObservableList<Teacher> selectedTeachers = teacherLists.getSelectionModel().getSelectedItems();
-            if (selectedTeachers.size() > 1) {
-                showAlert("You can only edit 1 teacher at once!");
-                return;
-            }
-            Teacher selectedTeacher = teacherLists.getSelectionModel().getSelectedItem();
-            if (selectedTeacher != null) {
-                TextInputDialog dialog = new TextInputDialog(selectedTeacher.getFullName());
-                dialog.setTitle("Edit Teacher");
-                dialog.setHeaderText("Edit teacher name");
-                dialog.setContentText("New Name:");
-
-                dialog.showAndWait().ifPresent(newName -> {
-                    if (!newName.trim().isEmpty()) {
-                        selectedTeacher.setFullName(newName);
-                        teacherLists.refresh();
-                        showAlert("Teacher edited successfully!");
-                    }
-                });
-            } else {
-                showAlert("Please select a teacher to edit.");
-            }
-        });
-
         teacherLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
 
         deleteT.setOnAction(e -> {
             ObservableList<Teacher> selectedTeachers = teacherLists.getSelectionModel().getSelectedItems();
-            if (!selectedTeachers.isEmpty()) {
-                teachers.removeAll(selectedTeachers);
-                teacherLists.getItems().removeAll(selectedTeachers);
-                showAlert("Selected teachers deleted successfully!");
-            } else {
-                showAlert("Please select at least one teacher to delete.");
+            if (selectedTeachers.isEmpty()) {
+                showAlert("No teacher selected. Please select at least one teacher to delete.");
+                return;
+            }
+
+            List<Teacher> teachersToRemove = new ArrayList<>();
+            for (Teacher teacher : selectedTeachers) {
+                if (!teacher.getAssignedCourses().isEmpty()) {
+                    showAlert("Cannot delete teacher: Teacher " + teacher.getFullName() + " is assigned to courses and cannot be deleted.");
+                } else {
+                    teachersToRemove.add(teacher);
+                }
+            }
+
+            if (!teachersToRemove.isEmpty()) {
+                teachers.removeAll(teachersToRemove);
+                teacherLists.getItems().removeAll(teachersToRemove);
+                showAlert("Selected teacher(s) deleted successfully!");
             }
         });
 
@@ -695,7 +675,7 @@ public class Main extends Application {
     }
 
 
-    private void displayInfo(Object selected) {
+        private void displayInfo(Object selected) {
         if (selected instanceof Course) { // search should be added
             infoRoot.getChildren().clear();
             try {

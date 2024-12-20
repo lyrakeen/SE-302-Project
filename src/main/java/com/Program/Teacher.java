@@ -33,7 +33,7 @@ public class Teacher {
         this.fullName = fullName;
     }
 
-    public List<Course> getAssignedCourses() {
+    public List<Course> getAssignedCourses() { //Shows teacher's assigned courses
         return assignedCourses;
     }
 
