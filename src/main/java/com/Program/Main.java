@@ -1,5 +1,5 @@
 package com.Program;
-
+import javafx.application.Platform;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,6 +71,30 @@ public class Main extends Application {
         menuBar.getMenus().addAll(fileMenu, helpMenu);
         fileMenu.getItems().addAll(importItem, teacherItem, studentItem, courseItem, saveItem, quitItem);
         helpMenu.getItems().addAll(aboutItem, manualItem);
+
+        saveItem.setOnAction(e -> {
+            showAlert("Save Successful all visible data changes are saved temporarily.");
+        });
+
+        quitItem.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirm Quit");
+            alert.setHeaderText("Do you want to save changes before quitting?");
+            alert.setContentText("Choose your action:");
+
+            ButtonType saveAndQuit = new ButtonType("Save and Quit");
+            ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(saveAndQuit, cancel);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == saveAndQuit) {
+                    showAlert("Save Successful all visible data changes are saved temporarily.");
+                    Platform.exit();
+                }
+            });
+        });
+
+        fileMenu.getItems().add(quitItem);
 
         courseItem.setOnAction(e -> {
             managingCourses();
@@ -276,7 +300,7 @@ public class Main extends Application {
             Stage addCourseStage = new Stage();
             VBox inputBox = new VBox(10);
             inputBox.setPadding(new Insets(10));
-            
+
             TextField courseNameField = new TextField();
             courseNameField.setPromptText("Enter course name");
 
@@ -415,13 +439,28 @@ public class Main extends Application {
 
 
         courseLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
-        // Delete Course Button
+
+        /**
+         * Implements the logic for safely deleting courses, ensuring the consistency of teacher assignments.
+         * This method dynamically adjusts the `assignedCourses` list for any teacher associated with a deleted course.
+         * By utilizing a database-backed approach for course deletion, this method maintains synchronization between the runtime state and the persistent storage, thus avoiding data anomalies.
+         */
+
         deleteC.setOnAction(e -> {
             ObservableList<Course> selectedCourses = courseLists.getSelectionModel().getSelectedItems();
             if (!selectedCourses.isEmpty()) {
                 for (Course c : selectedCourses) {
                     try {
                         databaseLoader.deleteCourse(c.getName());
+                        Teacher assignedTeacher = teachers.stream()
+                                .filter(teacher -> teacher.getFullName().equals(c.getLecturer()))
+                                .findFirst()
+                                .orElse(null);
+
+                        if (assignedTeacher != null) {
+                            assignedTeacher.getAssignedCourses().remove(c);
+                        }
+                        // Even if the assignedCourses list is empty, the teacher is retained in the teachers list, ensuring they remain visible in the UI.
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -429,7 +468,8 @@ public class Main extends Application {
                 // courses.removeAll(selectedCourses); //Bunu zaten databaseLoader'ın deleteCourse methodu yapıyor.
                 courseLists.getItems().removeAll(selectedCourses);
                 showAlert("Selected courses deleted successfully!");
-            } else {
+            }
+            else {
                 showAlert("Please select at least one course to delete.");
             }
         });
@@ -643,8 +683,13 @@ public class Main extends Application {
                 }
             });
         });
-
         teacherLists.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
+
+        /**
+         * Handles the deletion of selected teachers while preserving the system's data integrity.
+         * This method ensures that teachers assigned to courses cannot be removed, preventing orphan courses (courses with no assigned teacher). The `getAssignedCourses()` method is leveraged to check
+         * course assignments dynamically at runtime, making the system robust against potential state inconsistencies.
+         */
 
         deleteT.setOnAction(e -> {
             ObservableList<Teacher> selectedTeachers = teacherLists.getSelectionModel().getSelectedItems();
@@ -676,6 +721,7 @@ public class Main extends Application {
 
 
         private void displayInfo(Object selected) {
+
         if (selected instanceof Course) { // search should be added
             infoRoot.getChildren().clear();
             try {

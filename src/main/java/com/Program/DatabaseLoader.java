@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class DatabaseLoader {
     private List<Course> courses = new ArrayList<>();
@@ -206,6 +209,8 @@ public class DatabaseLoader {
             }
         }
     }
+
+
     public void updateCourseName(String oldName, String newName) throws SQLException {
         String updateSQL = "UPDATE courses SET course_name = ? WHERE course_name = ?";
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
