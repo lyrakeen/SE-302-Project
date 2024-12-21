@@ -51,7 +51,7 @@ public class Classroom {
         }
         return false;
     }
-    
+
     private int[] parseTime(String time) {
         String[] parts = time.split(":");
         return new int[] { Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) };
@@ -68,6 +68,6 @@ public class Classroom {
 
     public List<Course> getAssignedCourses() {
         // `schedule` içeriğini `getAssignedCourses` adıyla döndürüyoruz.
-        return new ArrayList<>(schedule);
+        return schedule;
     }
 }

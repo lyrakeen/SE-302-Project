@@ -14,7 +14,6 @@ public class CourseManager {
         this.students = students;
         this.classrooms = classrooms;
     }
-
     public void allocateClassrooms(DatabaseLoader databaseLoader) {
         for (Course course : courses) {
             Classroom assignedClassroom = null;

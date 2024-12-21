@@ -1,5 +1,8 @@
 package com.Program;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -93,6 +96,40 @@ public class Course {
             return true; // Hata durumunda varsayılan olarak çakışma olduğunu kabul et
         }
     }
+    public boolean checkAndReassignClassroom(DatabaseLoader databaseLoader, List<Classroom> availableClassrooms) {
+        if (this.getClassroom() == null || this.getClassroom().getCapacity() >= this.getStudents().size()) {
+            return false; // No need to change classroom
+        }
+
+        // Find a suitable classroom
+        Classroom newClassroom = availableClassrooms.stream()
+                .filter(classroom -> classroom.getCapacity() >= this.getStudents().size())
+                .filter(classroom -> classroom.getAssignedCourses().stream()
+                        .noneMatch(course -> this.isTimeConflict(course)))
+                .findFirst()
+                .orElse(null);
+
+        if (newClassroom != null) {
+            // Update old Classroom in memory
+            if (this.getClassroom() != null) {
+                this.getClassroom().getAssignedCourses().remove(this);
+            }
+
+            // Update new Classroom in memory
+            newClassroom.getAssignedCourses().add(this);
+            this.setClassroom(newClassroom);
+
+            // Update database
+            databaseLoader.updateCourseClassroom(this.getName(), newClassroom.getName());
+
+            // Notify user in GUI
+            Platform.runLater(() -> showAlert("Classroom reassigned to: " + newClassroom.getName()));
+        } else {
+            Platform.runLater(() -> showAlert("No suitable classroom found for course: " + this.getName()));
+        }
+        return true;
+    }
+
 
 
     public String getName() {
@@ -161,5 +198,15 @@ public class Course {
 
     public String getEndTime() {
         return endTime;
+    }
+
+    private void showAlert(String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

@@ -36,6 +36,7 @@ public class Main extends Application {
     static Set<Student> students;
     static List<Classroom> classrooms;
     static DatabaseLoader databaseLoader = new DatabaseLoader();
+    static CourseManager courseManager;
     List<Student> courseStudents;
     List<String> studentNames;
     VBox root = new VBox(10);
@@ -93,8 +94,9 @@ public class Main extends Application {
                 }
             });
         });
-
-        fileMenu.getItems().add(quitItem);
+        if (!fileMenu.getItems().contains(quitItem)) {
+            fileMenu.getItems().add(quitItem);
+        }
 
         courseItem.setOnAction(e -> {
             managingCourses();
@@ -416,6 +418,7 @@ public class Main extends Application {
 
                                 databaseLoader.updateCourseClassroom(selectedCourse.getName(), selectedClassroom.getName());
                                 selectedCourse.setClassroom(selectedClassroom);
+                                refreshClassrooms();
                                 classroomLabel.setText("Classroom: " + selectedClassroom.getName());
                                 classroomStage.close();
                                 showAlert("Classroom updated successfully!");
@@ -1212,7 +1215,8 @@ public class Main extends Application {
                         oldCourse.getStudents().remove(selectedStudent);
                         selectedStudent.getEnrolledCourses().add(newCourse);
                         newCourse.getStudents().add(selectedStudent);
-
+                        //Sınıf kontrolü
+                        newCourse.checkAndReassignClassroom(databaseLoader, classrooms);
                         editStage.close();
                         openStudentEditStage(selectedStudent);
 
@@ -1299,11 +1303,11 @@ public class Main extends Application {
                 try {
                     // Veritabanında güncelle
                     databaseLoader.assignStudentToCourse(selectedStudent.getFullName(), newCourse.getName());
-
                     // Bellekte güncelle
                     selectedStudent.getEnrolledCourses().add(newCourse);
                     newCourse.getStudents().add(selectedStudent);
-
+                    //Sınıf kontrolü
+                    newCourse.checkAndReassignClassroom(databaseLoader, classrooms);
                     // Edit sayfasını yeniden başlat
                     editStage.close();
                     openStudentEditStage(selectedStudent);
@@ -1554,7 +1558,26 @@ public class Main extends Application {
         // Cancel Button Action
         cancelButton.setOnAction(ev -> classroomSelectionStage.close());
     }
+  public void refreshClassrooms() {
+        try {
+            // Clear assigned courses for all classrooms
+            for (Classroom classroom : classrooms) {
+                if (classroom.getAssignedCourses() != null) {
+                    classroom.getAssignedCourses().clear(); // Clear assigned courses
+                }
+            }
 
+            // Reassign courses to classrooms based on current data
+            for (Course course : courses) {
+                Classroom classroom = course.getClassroom();
+                if (classroom != null) {
+                    classroom.getAssignedCourses().add(course);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String[] args) {
 
         databaseLoader.start();
@@ -1564,7 +1587,7 @@ public class Main extends Application {
         students = databaseLoader.getStudents();
         classrooms = databaseLoader.getClassrooms();
 
-        CourseManager courseManager = new CourseManager(courses, teachers, students, classrooms);
+        courseManager =new CourseManager(courses, teachers, students, classrooms);
         courseManager.allocateClassrooms(databaseLoader);
 
         launch(args);

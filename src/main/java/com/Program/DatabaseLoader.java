@@ -14,7 +14,6 @@ public class DatabaseLoader {
     private List<Course> courses = new ArrayList<>();
     private Set<Student> students = new HashSet<>();
     private Set<Teacher> teachers = new HashSet<>();
-
     private List<Classroom> classrooms = new ArrayList<>();
 
     public  void start() {
@@ -222,13 +221,12 @@ public class DatabaseLoader {
     }
 
     public void updateCourseClassroom(String courseName, String classroomName){
-        try(Connection connection =DriverManager.getConnection("jdbc:sqlite:university.db")) {
-            String updateSQL = "UPDATE courses SET classroom_name = ? WHERE course_name = ?";
-            try(PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
-                preparedStatement.setString(1, classroomName);
-                preparedStatement.setString(2, courseName);
-                preparedStatement.executeUpdate();
-            }
+        String updateSQL = "UPDATE courses SET classroom_name = ? WHERE course_name = ?";
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
+             PreparedStatement stmt = connection.prepareStatement(updateSQL)) {
+            stmt.setString(1, classroomName);
+            stmt.setString(2, courseName);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -334,26 +332,32 @@ public class DatabaseLoader {
         }
     }
     public void assignStudentToCourse(String studentName, String courseName) throws SQLException {
-        String fetchSQL = "SELECT students FROM courses WHERE course_name = ?";
-        String updateSQL = "UPDATE courses SET students = ? WHERE course_name = ?";
+        String fetchSQL = "SELECT students, student_count FROM courses WHERE course_name = ?";
+        String updateSQL = "UPDATE courses SET students = ?, student_count = ? WHERE course_name = ?";
 
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db");
              PreparedStatement fetchStmt = connection.prepareStatement(fetchSQL);
              PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
+
             // Mevcut öğrenci listesini al
             fetchStmt.setString(1, courseName);
             ResultSet rs = fetchStmt.executeQuery();
 
             if (rs.next()) {
                 String students = rs.getString("students");
+                int studentCount = rs.getInt("student_count");
+
+                // Yeni öğrenciyi ekle
                 List<String> studentList = new ArrayList<>(Arrays.asList(students.split(",\\s*")));
-                studentList.add(studentName); // Yeni öğrenciyi ekle
+                studentList.add(studentName);
                 String updatedStudents = String.join(",", studentList);
 
-                // Güncellenmiş öğrenci listesini veritabanına yaz
+                // Güncellenmiş öğrenci listesini ve öğrenci sayısını veritabanına yaz
                 updateStmt.setString(1, updatedStudents);
-                updateStmt.setString(2, courseName);
+                updateStmt.setInt(2, studentCount + 1); // Öğrenci sayısını artır
+                updateStmt.setString(3, courseName);
                 updateStmt.executeUpdate();
+
             }
         }
     }
