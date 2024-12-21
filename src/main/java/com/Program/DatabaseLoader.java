@@ -45,6 +45,25 @@ public class DatabaseLoader {
         }
     }
 
+    public void reloadClassrooms() {
+        classrooms.clear();  //önceki verileri temizliyor
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            loadClassrooms(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void reloadCourses() {
+        courses.clear();
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:university.db")) {
+            loadCourses(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private static void createTables(Connection connection) throws SQLException {
 
         String createCoursesTable = "CREATE TABLE IF NOT EXISTS courses (" +
@@ -67,7 +86,7 @@ public class DatabaseLoader {
         }
 }
 
-    private static List<String[]>readCSV(String filePath){
+    static List<String[]>readCSV(String filePath){
      List<String[]> data = new ArrayList<>();
      try(BufferedReader br = new BufferedReader(new FileReader(filePath))){
          String line;
@@ -81,44 +100,43 @@ public class DatabaseLoader {
      return data;
     }
 
-    private static void insertCoursesData(Connection connection, List<String[]> coursesData) throws SQLException{
-        String checkSQL = "SELECT COUNT(*) FROM courses";
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(checkSQL)) {
-            if (rs.next() && rs.getInt(1) > 0) {
-                System.out.println("Courses table already populated. Skipping insertion.");
-                return; // Eğer tablo doluysa veri ekleme
-            }
+    static void insertCoursesData(Connection connection, List<String[]> coursesData) throws SQLException {
+        // Eski verileri temizle
+        String deleteSQL = "DELETE FROM courses";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(deleteSQL);
         }
-        String insertSQL = "INSERT INTO courses (course_name, time_to_start, duration_in_lecture_hours, lecturer, students, student_count) VALUES (?, ?, ?, ?, ?, ?)";
-    try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
-        for(String[] row: coursesData){
-            String students = String.join(",", Arrays.copyOfRange(row,4,row.length));
-            preparedStatement.setString(1,row[0]);//course name
-            preparedStatement.setString(2,row[1]);// time to start
-            preparedStatement.setInt(3, Integer.parseInt(row[2])); //duration
-            preparedStatement.setString(4,row[3]);//lecturer
-            preparedStatement.setString(5,students);//student names
-            preparedStatement.setInt(6,row.length-4);//student count but I will update for the blank spaces later
-            preparedStatement.executeUpdate();
+
+        // Yeni verileri ekle
+        String insertSQL = "INSERT INTO courses (course_name, time_to_start, duration_in_lecture_hours, lecturer, students, student_count, classroom_name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
+            for (String[] row : coursesData) {
+                String students = String.join(",", Arrays.copyOfRange(row, 4, row.length));
+                preparedStatement.setString(1, row[0]); // Course Name
+                preparedStatement.setString(2, row[1]); // Time to Start
+                preparedStatement.setInt(3, Integer.parseInt(row[2])); // Duration
+                preparedStatement.setString(4, row[3]); // Lecturer
+                preparedStatement.setString(5, students); // Students
+                preparedStatement.setInt(6, row.length - 4); // Student Count
+                preparedStatement.setString(7, ""); // Classroom Name (optional)
+                preparedStatement.executeUpdate();
+            }
         }
     }
-}
 
-    private  static void insertClassroomData(Connection connection, List<String[]> classroomData) throws  SQLException{
-        String checkSQL = "SELECT COUNT(*) FROM classroom_capacity";
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(checkSQL)) {
-            if (rs.next() && rs.getInt(1) > 0) {
-                System.out.println("Classroom table already populated. Skipping insertion.");
-                return; // Eğer tablo doluysa veri ekleme
-            }
+    static void insertClassroomData(Connection connection, List<String[]> classroomData) throws SQLException {
+        // Eski verileri temizle
+        String deleteSQL = "DELETE FROM classroom_capacity";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(deleteSQL);
         }
-        String insertSQL = "INSERT INTO classroom_capacity (classroom_name,capacity) VALUES (?,?)";
-        try(PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)){
-            for(String[] row: classroomData){
-                preparedStatement.setString(1,row[0]);//classroom Name
-                preparedStatement.setInt(2,Integer.parseInt(row[1]));//capacity
+
+        // Yeni verileri ekle
+        String insertSQL = "INSERT INTO classroom_capacity (classroom_name, capacity) VALUES (?, ?)";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
+            for (String[] row : classroomData) {
+                preparedStatement.setString(1, row[0]); // Classroom Name
+                preparedStatement.setInt(2, Integer.parseInt(row[1])); // Capacity
                 preparedStatement.executeUpdate();
             }
         }

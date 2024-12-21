@@ -1,5 +1,8 @@
 package com.Program;
 import javafx.application.Platform;
+
+import java.io.*;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -7,6 +10,7 @@ import java.util.stream.Collectors;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,6 +32,15 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileNotFoundException;
+
 
 public class Main extends Application {
 
@@ -103,6 +116,76 @@ public class Main extends Application {
         });
         teacherItem.setOnAction(e -> managingTeachers());
         studentItem.setOnAction(e -> managingStudents());
+
+        importItem.setOnAction(event -> {
+            List<String> options = new ArrayList<>();
+            options.add("Courses.csv");
+            options.add("ClassroomCapacity.csv");
+
+            ChoiceDialog<String> choiceDialog = new ChoiceDialog<>("Courses.csv", options);
+            choiceDialog.setTitle("Select File to Replace");
+            choiceDialog.setHeaderText("Choose the file you want to replace:");
+            choiceDialog.setContentText("File:");
+
+            String selectedFileName = choiceDialog.showAndWait().orElse(null);
+            if (selectedFileName != null) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Select New CSV File");
+                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+                File selectedFile = fileChooser.showOpenDialog(null);
+
+                if (selectedFile != null) {
+                    try {
+                        File existingFile = new File(selectedFileName);
+                        File backupFile = new File(selectedFileName.replace(".csv", "_backup.csv"));
+
+                        //bir yanlışlık olmasına karşın eski dosyayı yedekliyor
+                        if (existingFile.exists()) {
+                            copyFile(existingFile, backupFile);
+                            showAlert("Backup created: " + backupFile.getName());
+                        }
+
+                        //yeni dosyayı eskisiyle değiştirme
+                        copyFile(selectedFile, existingFile);
+                        showAlert("File replaced successfully: " + selectedFileName);
+
+                        // Dosya türüne göre işlemler
+                        if ("Courses.csv".equals(selectedFileName)) {
+                            List<String[]> newCourseData = DatabaseLoader.readCSV("Courses.csv");
+                            databaseLoader.insertCoursesData(DriverManager.getConnection("jdbc:sqlite:university.db"), newCourseData);
+
+
+                            databaseLoader.reloadCourses();
+
+                            // UI güncelleniyor
+                            table.getItems().clear();
+                            selectionResult("Courses");
+
+                        } else if ("ClassroomCapacity.csv".equals(selectedFileName)) {
+                            List<String[]> newClassroomData = DatabaseLoader.readCSV("ClassroomCapacity.csv");
+                            databaseLoader.insertClassroomData(DriverManager.getConnection("jdbc:sqlite:university.db"), newClassroomData);
+
+
+                            databaseLoader.reloadClassrooms();
+
+                            // UI güncelleniyor
+                            table.getItems().clear();
+                            selectionResult("Classes");
+                        }
+                    } catch (IOException | SQLException e) {
+                        e.printStackTrace();
+                        showAlert("Failed to replace file: " + e.getMessage());
+                    }
+                } else {
+                    showAlert("No file selected.");
+                }
+            } else {
+                showAlert("No file selected to replace.");
+            }
+        });
+
+
+
 
         Button mainProceed = new Button("Proceed");
         Button addCourseButton = new Button("Add Course");
@@ -265,6 +348,20 @@ public class Main extends Application {
         firstStage.setTitle("Sketchuler");
         firstStage.setScene(scene);
         firstStage.show();
+    }
+
+    private static void copyFile(File source, File destination) throws IOException {
+        if (!source.exists()) {
+            throw new FileNotFoundException("Source file does not exist: " + source.getAbsolutePath());
+        }
+        try (InputStream input = new FileInputStream(source);
+             OutputStream output = new FileOutputStream(destination)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = input.read(buffer)) > 0) {
+                output.write(buffer, 0, length);
+            }
+        }
     }
 
     private void managingCourses() {
