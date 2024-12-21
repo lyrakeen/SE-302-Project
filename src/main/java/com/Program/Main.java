@@ -1549,12 +1549,17 @@ public class Main extends Application {
             selectedClassroom.getAssignedCourses().add(newCourse);
             courses.add(newCourse);
             databaseLoader.addCourse(newCourse);
+
+            // Now the assignedCourses of teacher updating, problem solved.
+            teacher.assignCourse(newCourse);
+
             // Kaydedilen bilgileri göster
             showAlert("Course added successfully!\n" +
                     "Classroom: " + selectedClassroom.getName() + "\n" +
                     "Students: " + selectedStudents.size());
             classroomSelectionStage.close();
         });
+
         // Cancel Button Action
         cancelButton.setOnAction(ev -> classroomSelectionStage.close());
     }
